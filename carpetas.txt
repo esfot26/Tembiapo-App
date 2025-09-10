@@ -1,0 +1,181 @@
+app/
+ ┣ screens/          # Pantallas principales
+ ┃ ┣ auth/           # Login, Registro, ForgotPassword...
+ ┃ ┣ home/           # Pantallas relacionadas al inicio/dashboard
+ ┃ ┣ todolist/       # Tus módulos específicos (ej: notas, tareas)
+ ┃ ┗ profile/        # Perfil de usuario
+ ┣ navigation/       # Toda la configuración de navegadores (stack, tabs)
+ ┣ components/       # Componentes reutilizables (botones, inputs, cards, etc.)
+ ┣ hooks/            # Custom hooks (useAuth, useTheme...)
+ ┣ services/         # Firebase, API, funciones externas
+ ┣ context/          # Contextos globales (AuthContext, ThemeContext...)
+ ┣ constants/        # Colores, estilos globales, rutas, config
+ ┣ utils/            # Funciones helpers (formatDate, validators...)
+ ┣ assets/           # Imágenes, íconos, fuentes
+
+
+
+Ejemplo de perfil de usuario:
+import { User, getAuth, signOut } from 'firebase/auth';
+import React from 'react';
+import { Alert, Button, Image, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import { FIREBASE_APP } from '../../../services/FirebaseConfig';
+
+const auth = getAuth(FIREBASE_APP);
+
+const Perfil = () => {
+    const navigation = useNavigation();
+    const [user, setUser] = React.useState<User | null>(null);
+
+    React.useEffect(() => {
+        const unsubscribe = auth.onAuthStateChanged(user => {
+            setUser(user);
+        });
+        return unsubscribe;
+    }, []);
+
+    const handleSignOut = async () => {
+        try {
+            await signOut(auth);
+            console.log('👋 Sesión cerrada');
+            Alert.alert("Sesión cerrada exitosamente");
+            // Aquí puedes decidir navegar a la pantalla de login si es necesario
+            // Si tu navegación principal ya maneja la lógica de autenticación, esto se hará automáticamente.
+        } catch (error) {
+            console.error('❌ Error al cerrar sesión:', error);
+            Alert.alert("Error", "No se pudo cerrar la sesión");
+        }
+    };
+
+    if (!user) {
+        return (
+            <View style={styles.container}>
+                <Text>Cargando perfil...</Text>
+            </View>
+        );
+    }
+
+    return (
+        <View style={styles.container}>
+            <View style={styles.profileContainer}>
+                {user.photoURL && (
+                    <Image source={{ uri: user.photoURL }} resizeMode="contain" style={styles.avatar} />
+                )}
+                <Text style={styles.name}>Nombre de Usuario: {user.displayName || 'No disponible'}</Text>
+                <Text style={styles.email}>Correo electrónico: {user.email || 'No disponible'}</Text>
+                
+                <Button title="Cerrar Sesión" onPress={handleSignOut} />
+            </View>
+        </View>
+    );
+};
+
+export default Perfil;
+
+const styles = StyleSheet.create({
+    container: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: 20,
+        backgroundColor: '#f5f5f5'
+    },
+    profileContainer: {
+        width: '100%',
+        maxWidth: 350,
+        alignItems: 'center',
+        padding: 30,
+        backgroundColor: '#fff',
+        borderRadius: 10,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.25,
+        shadowRadius: 3.84,
+        elevation: 5,
+    },
+    avatar: {
+        width: 100,
+        height: 100,
+        borderRadius: 50,
+        marginBottom: 15
+    },
+    name: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        marginBottom: 5,
+        color: '#333',
+    },
+    email: {
+        fontSize: 14,
+        color: '#666',
+        marginBottom: 20
+    },
+});
+
+
+//Ejemplo de navegación
+import React from 'react';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import Login from '../auth/Login';
+import Registro from '../auth/Registro';
+import Perfil from '../auth/Perfil';
+import Inicio from '../home/Inicio';
+import AgregarNota from '../todoList/AgregarNota'; // Pantalla para agregar una nota
+import ListaNotas from '../todoList/ListaNotas'; // Pantalla para ver la lista de notas
+import EditarPerfil from '../auth/EditarPerfil';
+
+const Tab = createBottomTabNavigator();
+const Stack = createNativeStackNavigator();
+
+// Navegador para las pantallas principales de la aplicación (solo para usuarios logueados)
+function AppTabs() {
+  return (
+    <Tab.Navigator>
+      <Tab.Screen name="Inicio" component={Inicio} />
+      <Tab.Screen name="ListaNotas" component={ListaNotas} options={{ headerTitle: "Mis Notas" }} />
+      <Tab.Screen name="Perfil" component={Perfil} />
+      <Tab.Screen name="AgregarNota" component={AgregarNota}  options={{headerTitle: "Agregar Nota"}}  />
+      <Tab.Screen name="EditarPerfil" component={EditarPerfil}  options={{ headerTitle: "Perfil" }}  />
+
+    </Tab.Navigator>
+  );
+}
+
+// Navegador para las pantallas de autenticación (solo para usuarios no logueados)
+function AuthStack() {
+  return (
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="Login" component={Login} />
+      <Stack.Screen name="Registro" component={Registro} />
+      <Stack.Screen name="Inicio" component={Inicio} />
+      <Stack.Screen name='AgregarNota' component={AgregarNota} options={{ headerTitle: "Agregar Nota" }} />
+      <Stack.Screen name='Lista Notas' component={ListaNotas} />
+      <Stack.Screen name='Perfil' component={Perfil} />
+      <Stack.Screen name='Editar Perfil' component={EditarPerfil} />
+    </Stack.Navigator>
+  );
+}
+
+// Interfaz para definir el tipo de las props
+interface Props {
+  usuarioLogueado: boolean;
+}
+
+// Componente principal de navegación que decide qué navegador mostrar
+function Navegacion({ usuarioLogueado }: Props) {
+  return (
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      {usuarioLogueado ? (
+        // Si el usuario está logueado, muestra las pestañas de la aplicación
+        <Stack.Screen name="App" component={AppTabs} />
+      ) : (
+        // Si no está logueado, muestra las pantallas de autenticación
+        <Stack.Screen name="Auth" component={AuthStack} />
+      )}
+    </Stack.Navigator>
+  );
+}
+
+export default Navegacion;
