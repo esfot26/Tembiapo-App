@@ -9,6 +9,14 @@ dist/
 web-build/
 expo-env.d.ts
 
+
+
+# Credentials
+src/services/FirebaseConfig.tsx
+
+
+.txt
+
 # Native
 .kotlin/
 *.orig.*
