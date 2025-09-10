@@ -59,6 +59,16 @@ npx expo start
 ```
 
 ---
+## Demo de la aplicación de momento
+
+https://github.com/user-attachments/assets/5cab76dd-ae27-4b9f-9bca-527532e66200
+
+Actualmente el demo muestra funcionalidades básicas: El login, To-Do List y Calendario CRUD.
+
+---
+
+
+---
 
 ## ✅ Estado del Proyecto  
 - [x] Autenticación con Firebase con correo electrónico y contraseña 
