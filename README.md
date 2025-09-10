@@ -48,8 +48,8 @@ git merge feature/nueva-funcionalidad
 ### Pasos  
 ```bash
 # Clonar repositorio
-git clone https://github.com/usuario/asistente-academico.git
-cd asistente-academico
+git clone https://github.com/esfot26/Tembiapo-App.git
+cd Tembiapo-App
 
 # Instalar dependencias
 npm install
@@ -61,9 +61,11 @@ npx expo start
 ---
 
 ## ✅ Estado del Proyecto  
-- [ ] Autenticación con Google  
-- [ ] Gestión de carpetas y archivos  
-- [ ] Módulo To-Do List  
+- [x] Autenticación con Firebase con correo electrónico y contraseña 
+- [ ] Autenticación con Google (Funcional en la Web, debo arreglar en plataforma móvil)  
+- [ ] Módulo de Gestión de carpetas y archivos  
+- [x] Módulo To-Do List
+- [x] Módulo de Calendario tipo Crud 
 - [ ] Pruebas y despliegue  
 
 ---
