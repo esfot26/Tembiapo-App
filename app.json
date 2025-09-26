@@ -3,6 +3,11 @@
     "name": "TembiapoApp",
     "slug": "TembiapoApp",
     "version": "1.0.0",
+    "platforms": [
+      "ios",
+      "android",
+      "web"
+    ],
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -13,17 +18,42 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.esfot.TembiapoApp",
+      "googleServicesFile": "./GoogleService-Info.plist"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "edgeToEdgeEnabled": true
+      "package": "com.esfot.TembiapoApp",
+      "scheme": "TembiapoApp",
+      "edgeToEdgeEnabled": true,
+      "googleServicesFile": "./google-services.json"
     },
     "web": {
+      "bundler": "metro",
+      "output": "static",
       "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      [
+        "@react-native-google-signin/google-signin",
+        {
+          "iosUrlScheme": "com.googleusercontent.apps.63825210908-s13rv36ltph3um4t7hgghd8rtp5otik1"
+        }
+      ]
+    ],
+    "extra": {
+      "googleAuth": {
+        "expoClientId": "63825210908-o3p1o3roiicj908n6mfouslrcfhoki0u.apps.googleusercontent.com",
+        "iosClientId": "63825210908-s13rv36ltph3um4t7hgghd8rtp5otik1.apps.googleusercontent.com",
+        "androidClientId": "63825210908-lg5nf87uuttbsunq3fpo3qlihjrin8sc.apps.googleusercontent.com"
+      }
+    },
+    "experiments": {
+      "typedRoutes": true
     }
   }
 }
