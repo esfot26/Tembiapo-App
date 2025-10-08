@@ -19,22 +19,24 @@ import { doc, setDoc } from "firebase/firestore"
 import { Ionicons } from "@expo/vector-icons"
 
 const { width, height } = Dimensions.get("window")
+const isSmallDevice = width < 375;
 
-function ImprovedRegistro() {
+function Registro() {
     const [username, setUsername] = React.useState("")
     const [nombre, setNombre] = React.useState("")
     const [apellido, setApellido] = React.useState("")
     const [telefono, setTelefono] = React.useState("")
-    const [fechaNacimiento, setFechaNacimiento] = React.useState("")
+    const [fechaNacimiento, setFechaNacimiento] = React.useState("")  
+    const [rol, setRol] = React.useState("usuario")      
     const [email, setEmail] = React.useState("")
     const [password, setPassword] = React.useState("")
     const [showPassword, setShowPassword] = React.useState(false)
     const [loading, setIsLoading] = React.useState(false)
     const auth = FIREBASE_AUTH
 
-    const createAccount = async () => {
+    const crearCuenta = async () => {
         if (!email || !password || !nombre || !apellido || !telefono || !fechaNacimiento || !username) {
-            Alert.alert("Error", "Todos los campos son obligatorios.")
+            Alert.alert("Todos los campos son obligatorios.")
             return
         }
 
@@ -59,10 +61,10 @@ function ImprovedRegistro() {
             return
         }
 
-        const telefonoRegex = /^\d+$/
+        const telefonoRegex = /^\d{8,15}$/;
         if (!telefonoRegex.test(telefono)) {
-            Alert.alert("Error", "Por favor, ingresa un número de teléfono válido.")
-            return
+            Alert.alert("Error", "Por favor, ingresa un teléfono válido (mínimo 8 dígitos).");
+            return;
         }
 
         const fechaRegex = /^\d{2}-\d{2}-\d{4}$/
@@ -78,15 +80,18 @@ function ImprovedRegistro() {
             console.log(user)
             alert("¡Cuenta creada exitosamente! Bienvenido " + response.user.email)
             if (user) {
-                await setDoc(doc(FIREBASE_DB, "users", user.uid), {
-                    email: user.email,
-                    username: username,
-                    nombre: nombre,
-                    apellido: apellido,
-                    telefono: telefono,
-                    fechaNacimiento: fechaNacimiento,
-                })
+                await setDoc(doc(FIREBASE_DB, "usuarios", user.uid), {
+                    email: email.toLowerCase(),
+                    username: username.trim(),
+                    nombre: nombre.trim(),
+                    apellido: apellido.trim(),
+                    telefono: telefono.trim(),
+                    fechaNacimiento: fechaNacimiento.trim(),
+                    rol: "usuario",
+                    creado: new Date().toISOString()
+                });
             }
+            
         } catch (error) {
             if (error instanceof Error) {
                 alert("Error al crear cuenta: " + error.message)
@@ -107,7 +112,7 @@ function ImprovedRegistro() {
                             <Ionicons name="school" size={width * 0.1} color="#1e40af" />
                         </View>
                         <Text style={styles.title}>Tembiapo</Text>
-                        
+
                     </View>
 
                     <View style={styles.formContainer}>
@@ -164,9 +169,14 @@ function ImprovedRegistro() {
                                 <TextInput
                                     value={fechaNacimiento}
                                     style={styles.input}
-                                    placeholder="Fecha de Nacimiento (DD-MM-YYYY)"
+                                    keyboardType="number-pad"
+                                    placeholder="Fecha de Nacimiento"
                                     onChangeText={setFechaNacimiento}
                                 />
+                            </View>
+
+                            <View style={styles.inputContainer}>
+                                
                             </View>
                         </View>
 
@@ -204,7 +214,7 @@ function ImprovedRegistro() {
 
                         <TouchableOpacity
                             style={[styles.registerButton, loading && styles.registerButtonDisabled]}
-                            onPress={createAccount}
+                            onPress={crearCuenta}
                             disabled={loading}
                         >
                             {loading ? (
@@ -223,7 +233,7 @@ function ImprovedRegistro() {
     )
 }
 
-export default ImprovedRegistro
+export default Registro
 
 const styles = StyleSheet.create({
     container: {
@@ -235,93 +245,97 @@ const styles = StyleSheet.create({
     },
     scrollContainer: {
         flexGrow: 1,
-        paddingHorizontal: width * 0.07,
-        paddingVertical: height * 0.05,
+        paddingHorizontal: width * 0.07, // ligeramente menos padding en móviles
+        paddingVertical: height * 0.01, // reducido para evitar espacio excesivo
     },
     header: {
         alignItems: "center",
-        marginBottom: height * 0.01,
-
+        marginBottom: height * 0.01, // más espacio para respirar
     },
     logoContainer: {
-        width: width * 0.12,
-        height: width * 0.12,
-        borderRadius: width * 0.08,
+        width: width * 0.14,
+        height: width * 0.14,
+        borderRadius: width * 0.07,
         backgroundColor: "#dbeafe",
         justifyContent: "center",
         alignItems: "center",
-        marginBottom: height * 0.015,
+        marginBottom: height * 0.02,
     },
     title: {
-        fontSize: width * 0.08,
-        fontWeight: "700",
+        fontSize: isSmallDevice ? width * 0.04 : width * 0.05,
+        fontWeight: "800",
         color: "#1e40af",
-        marginBottom: height * 0.005,
+        textAlign: "center",
     },
     subtitle: {
-        fontSize: width * 0.04,
+        fontSize: isSmallDevice ? width * 0.035 : width * 0.04,
         color: "#6b7280",
         textAlign: "center",
+        lineHeight: isSmallDevice ? 10 : 14,
     },
     formContainer: {
         flex: 1,
     },
     sectionContainer: {
-        marginBottom: height * 0.03,
+        marginBottom: height * 0.01,
     },
     sectionTitle: {
-        fontSize: width * 0.045,
+        fontSize: isSmallDevice ? width * 0.025 : width * 0.035,
         fontWeight: "600",
         color: "#374151",
-        marginBottom: height * 0.02,
+        marginBottom: height * 0.010,
     },
     inputContainer: {
         flexDirection: "row",
         alignItems: "center",
         backgroundColor: "#ffffff",
         borderRadius: 12,
-        marginBottom: height * 0.015,
-        paddingHorizontal: width * 0.04,
-        paddingVertical: height * 0.015,
+        marginBottom: height * 0.012,
+        paddingHorizontal: width * 0.05,
+        paddingVertical: height * 0.012,
         borderWidth: 1,
         borderColor: "#e5e7eb",
+        // Sombras más suaves y consistentes
         shadowColor: "#000",
         shadowOffset: {
             width: 0,
             height: 1,
         },
-        shadowOpacity: 0.05,
-        shadowRadius: 2,
-        elevation: 1,
+        shadowOpacity: 0.08,
+        shadowRadius: 3,
+        elevation: 2,
+        minHeight: 50, // asegura tamaño táctil mínimo
     },
     inputIcon: {
-        marginRight: width * 0.03,
+        marginRight: width * 0.012,
     },
     input: {
         flex: 1,
-        fontSize: width * 0.04,
+        fontSize: isSmallDevice ? width * 0.038 : width * 0.042,
         color: "#374151",
+        paddingVertical: 0, // evita padding extra en iOS
     },
     eyeIcon: {
-        padding: 5,
+        padding: 6,
     },
     registerButton: {
         backgroundColor: "#1e40af",
         borderRadius: 12,
-        paddingVertical: height * 0.02,
-        paddingHorizontal: width * 0.06,
+        paddingVertical: height * 0.022,
+        paddingHorizontal: width * 0.08,
         flexDirection: "row",
         alignItems: "center",
         justifyContent: "center",
-        marginTop: height * 0.02,
+        marginTop: height * 0.03,
+        minHeight: 52, // tamaño táctil recomendado
         shadowColor: "#1e40af",
         shadowOffset: {
             width: 0,
             height: 4,
         },
-        shadowOpacity: 0.3,
-        shadowRadius: 8,
-        elevation: 8,
+        shadowOpacity: 0.25,
+        shadowRadius: 6,
+        elevation: 6,
     },
     registerButtonDisabled: {
         backgroundColor: "#9ca3af",
@@ -330,8 +344,7 @@ const styles = StyleSheet.create({
     },
     registerButtonText: {
         color: "#ffffff",
-        fontSize: width * 0.045,
+        fontSize: isSmallDevice ? width * 0.042 : width * 0.045,
         fontWeight: "600",
-        marginRight: width * 0.02,
     },
 })

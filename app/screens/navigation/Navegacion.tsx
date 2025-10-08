@@ -1,12 +1,12 @@
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs"
 import { createNativeStackNavigator } from "@react-navigation/native-stack"
-import Login from "../auth/Login"
+import Login from "../auth/login/Login"
 import Registro from "../auth/Registro"
-import Perfil from "../auth/Perfil"
+import Perfil from "../auth/perfil/Perfil"
 import Inicio from "../home/Inicio"
 import AgregarNota from "../todoList/AgregarNota"
 import ListaNotas from "../todoList/ListaNotas"
-import EditarPerfil from "../auth/EditarPerfil"
+import EditarPerfil from "../auth/perfil/EditarPerfil"
 import CalendarioCrud from "../calendario/CalendarioCrud"
 
 // Stacks
@@ -17,7 +17,7 @@ const Stack = createNativeStackNavigator()
 function NotasStack() {
   return (
     <Stack.Navigator screenOptions={{ headerShown: true }}>
-      <Stack.Screen name="ListaNotas" component={ListaNotas} options={{ headerTitle: "Notas" }} />
+      <Stack.Screen name="ListaNotas" component={ListaNotas} options={{ headerShown: false }} />
       <Stack.Screen name="AgregarNota" component={AgregarNota} options={{ headerTitle: "Agregar Nota" }} />
       <Stack.Screen name="EditarNota" component={AgregarNota} options={{ headerTitle: "Editar Nota" }} />
     </Stack.Navigator>
@@ -50,8 +50,8 @@ function AppTabs() {
   return (
     <Tab.Navigator screenOptions={{ headerShown: false }}>
       <Tab.Screen name="Inicio" component={Inicio} />
-      <Tab.Screen name="Notas" component={NotasStack} />
-      <Tab.Screen name="Calendario" component={CalendarioStack} />
+      <Tab.Screen name="Notas" component={NotasStack} options={{ headerShown: false }} />
+      <Tab.Screen name="Calendario" component={CalendarioStack} options={{ headerShown: false }} />
       <Tab.Screen name="Perfil" component={PerfilStack} />
     </Tab.Navigator>
   )

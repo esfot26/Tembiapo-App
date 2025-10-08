@@ -220,7 +220,7 @@ export default function Inicio() {
                         iconColor="#8b5cf6"
                         title="Archivos"
                         subtitle="Documentos y recursos"
-                        onPress={() => navigation.navigate("Carpetas")} 
+                        onPress={() => navigation.navigate("Carpetas")}
                     />
 
                     <MenuItem

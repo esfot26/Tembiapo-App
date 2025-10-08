@@ -11,8 +11,9 @@ import {
     Animated,
 } from "react-native"
 import { Ionicons } from "@expo/vector-icons"
-import { CATEGORIAS_CONFIG, Categoria, PRIORIDADES_CONFIG, Prioridad, styles } from "./AgregarNota.styles"
+import { CATEGORIAS_CONFIG, Categoria, PRIORIDADES_CONFIG, Prioridad, styles,useAnimations } from "./AgregarNota.styles"
 import { AgregarNotaLogica } from "./AgregarNotaLogica"
+
 
 
 export default function AgregarNota() {
@@ -31,12 +32,10 @@ export default function AgregarNota() {
         handleOpenModal,
         handleCloseModal,
         crearNota,
-        fadeAnim,
-        slideAnim,
-        modalScale,
-        buttonScale,
-        inputFocusAnim,
     } = AgregarNotaLogica();
+
+    const { fadeAnim, slideAnim, buttonScale, modalScale, inputFocusAnim } = useAnimations();
+
 
 
     return (

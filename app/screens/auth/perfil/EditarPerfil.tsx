@@ -16,7 +16,7 @@ import {
 import { Ionicons } from "@expo/vector-icons"
 import { doc, updateDoc } from "firebase/firestore"
 import { getAuth } from "firebase/auth"
-import { FIREBASE_DB, FIREBASE_APP } from "../../../services/FirebaseConfig"
+import { FIREBASE_DB, FIREBASE_APP } from "../../../../services/FirebaseConfig"
 import type { NativeStackScreenProps } from "@react-navigation/native-stack"
 import Toast from "react-native-toast-message"
 

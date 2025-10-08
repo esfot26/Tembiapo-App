@@ -49,13 +49,15 @@ export const PRIORIDADES_CONFIG = {
 }
 
 
-export const fadeAnim = useRef(new Animated.Value(0)).current
-export const slideAnim = useRef(new Animated.Value(50)).current
-export const buttonScale = useRef(new Animated.Value(1)).current
-export const modalScale = useRef(new Animated.Value(0.9)).current
-export const inputFocusAnim = useRef(new Animated.Value(0)).current
-export const { width, height } = Dimensions.get("window")
-
+export function useAnimations() {
+    const fadeAnim = useRef(new Animated.Value(0)).current;
+    const slideAnim = useRef(new Animated.Value(50)).current;
+    const buttonScale = useRef(new Animated.Value(1)).current;
+    const modalScale = useRef(new Animated.Value(0.9)).current;
+    const inputFocusAnim = useRef(new Animated.Value(0)).current;
+  
+    return { fadeAnim, slideAnim, buttonScale, modalScale, inputFocusAnim };
+  }
 // Tipos actualizados
 export type Categoria = "personal" | "trabajo" | "estudio" | "otro"
 export type Prioridad = "baja" | "media" | "alta"
@@ -71,7 +73,13 @@ export interface Nota {
 }
 
 
+export const { width: width } = Dimensions.get("window")
+export const { height: height } = Dimensions.get("window")
+
+
 export const styles = StyleSheet.create({
+
+    
     container: {
         marginHorizontal: width * 0.04,
         marginVertical: width * 0.02,

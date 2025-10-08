@@ -77,6 +77,12 @@ export default function Navbar() {
             
             onPress: () => handleNavigation("Perfil"),
         },
+        {
+            key: "Logout",
+            icon: "log-out-outline" as const,
+            activeIcon: "log-out" as const,
+            onPress: handleLogout,
+        },
     ]
 
     return (

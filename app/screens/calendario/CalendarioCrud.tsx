@@ -22,7 +22,7 @@ import { Ionicons } from "@expo/vector-icons"
 import { FIREBASE_DB, FIREBASE_AUTH } from "../../../services/FirebaseConfig"
 import { collection, onSnapshot, doc, deleteDoc, updateDoc, addDoc, Timestamp } from "firebase/firestore"
 import Toast from "react-native-toast-message"
-
+import { styles } from "./Calendario.styles"
 
 const { width, height } = Dimensions.get("window")
 
@@ -94,13 +94,13 @@ export default function ImprovedCalendar() {
     const formatTimeInput = (text: string): string => {
         // Eliminar cualquier cosa que no sea número
         const numbers = text.replace(/\D/g, '').slice(0, 4); // Máximo 4 dígitos
-      
+
         if (numbers.length <= 2) {
-          return numbers;
+            return numbers;
         }
-      
+
         return `${numbers.slice(0, 2)}:${numbers.slice(2, 4)}`;
-      };
+    };
 
     const dimensions = getResponsiveDimensions()
 
@@ -116,12 +116,12 @@ export default function ImprovedCalendar() {
             return
         }
 
-        const eventsRef = collection(FIREBASE_DB, `events/${userId}/user_events`)
+        const eventosRef = collection(FIREBASE_DB, `eventos/${userId}/user_eventos`)
 
         console.log("🔍 Suscribiéndose a eventos para userId:", userId)
 
         const unsubscribe = onSnapshot(
-            eventsRef,
+            eventosRef,
             (snapshot) => {
                 console.log("📦 Snapshots recibidos:", snapshot.docs.length)
                 const newEvents: Event[] = []
@@ -241,7 +241,7 @@ export default function ImprovedCalendar() {
                         { width: dimensions.calendarCellSize, height: dimensions.calendarCellSize },
                         isToday && styles.todayCell,
                     ]}
-                    onPress={() => handleDayPress(day)} 
+                    onPress={() => handleDayPress(day)}
                     activeOpacity={0.7} // 👈 OPCIONAL: para efecto de press
                 >
                     <Text style={[styles.dayNumber, { fontSize: dimensions.subtituloFontSize }, isToday && styles.todayText]}>
@@ -280,7 +280,7 @@ export default function ImprovedCalendar() {
             const eventData = {
                 titulo: eventTitle.trim(),
                 description: eventDescription.trim(),
-                date: Timestamp.fromDate(selectedDate),
+                date: Timestamp.fromDate(selectedDate), // ✅ Usar la fecha seleccionada
                 type: eventType,
                 time: eventTime.trim(),
                 updatedAt: Timestamp.now(),
@@ -288,7 +288,7 @@ export default function ImprovedCalendar() {
 
             if (editingEvent) {
                 // Actualizar evento existente
-                const eventRef = doc(FIREBASE_DB, `events/${userId}/user_events`, editingEvent.id)
+                const eventRef = doc(FIREBASE_DB, `eventos/${userId}/user_eventos`, editingEvent.id)
                 await updateDoc(eventRef, eventData)
                 Toast.show({
                     type: "success",
@@ -297,7 +297,7 @@ export default function ImprovedCalendar() {
                 })
             } else {
                 // Crear nuevo evento
-                const eventsRef = collection(FIREBASE_DB, `events/${userId}/user_events`)
+                const eventsRef = collection(FIREBASE_DB, `eventos/${userId}/user_eventos`)
                 await addDoc(eventsRef, {
                     ...eventData,
                     createdAt: Timestamp.now(),
@@ -309,8 +309,8 @@ export default function ImprovedCalendar() {
                 })
             }
 
-            // No cerramos el modal automáticamente, solo reseteamos el formulario
-            setModalVisible(false)
+            // ✅ Resetear solo el formulario, mantener el modal abierto
+            resetForm()
 
             // Recargar eventos del día
             if (selectedDate) {
@@ -318,6 +318,7 @@ export default function ImprovedCalendar() {
                 const eventsForSelectedDate = getEventsForDate(day)
                 setSelectedDayEvents(eventsForSelectedDate)
             }
+
         } catch (error) {
             console.error("Error saving event:", error)
             Alert.alert("Error", "No se pudo guardar el evento")
@@ -332,7 +333,7 @@ export default function ImprovedCalendar() {
                 style: "destructive",
                 onPress: async () => {
                     try {
-                        const eventRef = doc(FIREBASE_DB, `events/${userId}/user_events`, eventId)
+                        const eventRef = doc(FIREBASE_DB, `eventos/${userId}/user_eventos`, eventId)
                         await deleteDoc(eventRef)
                         Toast.show({
                             type: "success",
@@ -359,13 +360,13 @@ export default function ImprovedCalendar() {
         setEventDescription(event.description)
         setEventType(event.type)
         setEventTime(event.time || "")
-        setModalVisible(true)
+        //setModalVisible(true)
     }
 
     const resetForm = () => {
         setEditingEvent(null)
-        setSelectedDate(null)
-        setEventTitle("") // 👈 Cambiado
+        // NO resetear selectedDate aquí - lo necesitamos para saber qué día agregar
+        setEventTitle("")
         setEventDescription("")
         setEventType("other")
         setEventTime("")
@@ -382,22 +383,23 @@ export default function ImprovedCalendar() {
         setSelectedDate(clickedDate)
         setSelectedDayEvents(eventsForDate) // 👈 Asegúrate de tener este estado
 
-        if (eventsForDate.length > 0) {
-            // Si hay eventos, pre-cargamos el primero para editar
-            const firstEvent = eventsForDate[0]
-            setEditingEvent(firstEvent)
-            setEventTitle(firstEvent.titulo)
-            setEventDescription(firstEvent.description)
-            setEventType(firstEvent.type)
-            setEventTime(firstEvent.time || "")
-        } else {
-            // Si no hay eventos, reseteamos el formulario
-            setEditingEvent(null)
-            setEventTitle("")
-            setEventDescription("")
-            setEventType("other")
-            setEventTime("")
-        }
+        // if (eventsForDate.length > 0) {
+        //     // Si hay eventos, pre-cargamos el primero para editar
+        //     const firstEvent = eventsForDate[0]
+        //     setEditingEvent(firstEvent)
+        //     setEventTitle(firstEvent.titulo)
+        //     setEventDescription(firstEvent.description)
+        //     setEventType(firstEvent.type)
+        //     setEventTime(firstEvent.time || "")
+        // } else {
+        //     // Si no hay eventos, reseteamos el formulario
+        //     setEditingEvent(null)
+        //     setEventTitle("")
+        //     setEventDescription("")
+        //     setEventType("other")
+        //     setEventTime("")
+        // }
+        resetForm()
 
         setModalVisible(true)
     }
@@ -439,7 +441,7 @@ export default function ImprovedCalendar() {
             <StatusBar barStyle="dark-content" backgroundColor="#f8fafc" />
 
             {/* Header */}
-            <View style={[styles.header, { marginBottom: dimensions.spacing }]}>
+            {/* <View style={[styles.header, { marginBottom: dimensions.spacing }]}>
                 <View style={styles.headerContent}>
                     <View>
                         <Text style={[styles.headerTitle, { fontSize: dimensions.headerFontSize }]}>Calendario</Text>
@@ -458,7 +460,7 @@ export default function ImprovedCalendar() {
                         <Ionicons name="add" size={dimensions.iconSize} color="#ffffff" />
                     </TouchableOpacity>
                 </View>
-            </View>
+            </View> */}
 
             <ScrollView showsVerticalScrollIndicator={false} style={styles.scrollView}>
                 {/* Calendar Navigation */}
@@ -535,7 +537,10 @@ export default function ImprovedCalendar() {
                 animationType="slide"
                 transparent={true}
                 visible={modalVisible}
-                onRequestClose={() => setModalVisible(false)}
+                onRequestClose={() => {
+                    setModalVisible(false)
+                    resetForm() // ✅ Resetear al cerrar
+                }}
             >
                 <View style={styles.modalOverlay}>
                     <View style={[styles.modalContent, { width: width * 0.9, maxHeight: height * 0.85 }]}>
@@ -545,12 +550,15 @@ export default function ImprovedCalendar() {
                                     ? `Eventos del ${selectedDate.getDate()} de ${monthNames[selectedDate.getMonth()]}`
                                     : "Eventos"}
                             </Text>
-                            <TouchableOpacity onPress={() => setModalVisible(false)}>
+                            <TouchableOpacity onPress={() => {
+                                setModalVisible(false)
+                                resetForm() // ✅ Resetear al cerrar
+                            }}>
                                 <Ionicons name="close" size={24} color="#64748b" />
                             </TouchableOpacity>
                         </View>
 
-                        <ScrollView showsVerticalScrollIndicator={false} >
+                        <ScrollView showsVerticalScrollIndicator={false}>
                             {/* Lista de eventos existentes */}
                             {selectedDayEvents.length > 0 && (
                                 <View style={styles.eventsContainer}>
@@ -558,74 +566,67 @@ export default function ImprovedCalendar() {
                                         Eventos existentes ({selectedDayEvents.length})
                                     </Text>
 
-                                    {selectedDayEvents.length === 0 ? (
-                                        <View style={styles.emptyState}>
-                                            <Ionicons name="calendar-outline" size={40} color="#ccc" />
-                                            <Text style={styles.emptyStateText}>No hay eventos para este día</Text>
-                                        </View>
-                                    ) : (
-                                        selectedDayEvents.map((event, index) => (
-                                            <View key={event.id} style={styles.eventCard}>
-                                                <View style={styles.eventHeader}>
-                                                    <View style={styles.eventTypeContainer}>
-                                                        <Ionicons
-                                                            name={getEventTypeInfo(event.type).icon as any}
-                                                            size={16}
-                                                            color={getEventTypeInfo(event.type).color}
-                                                            style={styles.eventIcon}
-                                                        />
-                                                        <Text style={[styles.eventTypeText, { color: getEventTypeInfo(event.type).color }]}>
-                                                            {getEventTypeInfo(event.type).label}
-                                                        </Text>
-                                                    </View>
-                                                    <View style={styles.eventActions}>
-                                                        <TouchableOpacity
-                                                            onPress={() => editEvent(event)}
-                                                            style={styles.actionButton}
-                                                        >
-                                                            <Ionicons name="create-outline" size={18} color="#3b82f6" />
-                                                        </TouchableOpacity>
-                                                        <TouchableOpacity
-                                                            onPress={() => deleteEvent(event.id)}
-                                                            style={[styles.actionButton, styles.deleteButton]}
-                                                        >
-                                                            <Ionicons name="trash-outline" size={18} color="#ef4444" />
-                                                        </TouchableOpacity>
-                                                    </View>
-                                                </View>
-
-                                                <View style={styles.eventContent}>
-                                                    <Text style={[styles.eventTitle, { fontSize: dimensions.subtituloFontSize }]}>
-                                                        {event.titulo}
+                                    {selectedDayEvents.map((event, index) => (
+                                        <View key={event.id} style={styles.eventCard}>
+                                            <View style={styles.eventHeader}>
+                                                <View style={styles.eventTypeContainer}>
+                                                    <Ionicons
+                                                        name={getEventTypeInfo(event.type).icon as any}
+                                                        size={16}
+                                                        color={getEventTypeInfo(event.type).color}
+                                                        style={styles.eventIcon}
+                                                    />
+                                                    <Text style={[styles.eventTypeText, { color: getEventTypeInfo(event.type).color }]}>
+                                                        {getEventTypeInfo(event.type).label}
                                                     </Text>
-
-                                                    {event.description && (
-                                                        <Text style={[styles.eventDescription, { fontSize: dimensions.subtituloFontSize - 1 }]}>
-                                                            {event.description}
-                                                        </Text>
-                                                    )}
-
-                                                    {event.time && (
-                                                        <View style={styles.eventTime}>
-                                                            <Ionicons name="time-outline" size={14} color="#666" />
-                                                            <Text style={[styles.eventTimeText, { fontSize: dimensions.subtituloFontSize - 1 }]}>
-                                                                {event.time}
-                                                            </Text>
-                                                        </View>
-                                                    )}
                                                 </View>
-
-                                                {index < selectedDayEvents.length - 1 && <View style={styles.eventSeparator} />}
+                                                <View style={styles.eventActions}>
+                                                    <TouchableOpacity
+                                                        onPress={() => editEvent(event)}
+                                                        style={styles.actionButton}
+                                                    >
+                                                        <Ionicons name="create-outline" size={18} color="#3b82f6" />
+                                                    </TouchableOpacity>
+                                                    <TouchableOpacity
+                                                        onPress={() => deleteEvent(event.id)}
+                                                        style={[styles.actionButton, styles.deleteButton]}
+                                                    >
+                                                        <Ionicons name="trash-outline" size={18} color="#ef4444" />
+                                                    </TouchableOpacity>
+                                                </View>
                                             </View>
-                                        ))
-                                    )}
+
+                                            <View style={styles.eventContent}>
+                                                <Text style={[styles.eventTitle, { fontSize: dimensions.subtituloFontSize }]}>
+                                                    {event.titulo}
+                                                </Text>
+
+                                                {event.description && (
+                                                    <Text style={[styles.eventDescription, { fontSize: dimensions.subtituloFontSize - 1 }]}>
+                                                        {event.description}
+                                                    </Text>
+                                                )}
+
+                                                {event.time && (
+                                                    <View style={styles.eventTime}>
+                                                        <Ionicons name="time-outline" size={14} color="#666" />
+                                                        <Text style={[styles.eventTimeText, { fontSize: dimensions.subtituloFontSize - 1 }]}>
+                                                            {event.time}
+                                                        </Text>
+                                                    </View>
+                                                )}
+                                            </View>
+
+                                            {index < selectedDayEvents.length - 1 && <View style={styles.eventSeparator} />}
+                                        </View>
+                                    ))}
                                 </View>
                             )}
 
                             {/* Formulario para nuevo evento */}
                             <View style={styles.eventsSection}>
                                 <Text style={[styles.sectionLabel, { fontSize: dimensions.subtituloFontSize }]}>
-                                    {selectedDayEvents.length > 0 ? "Agregar otro evento" : "Nuevo evento"}
+                                    {editingEvent ? "Editando evento" : "Agregar nuevo evento"}
                                 </Text>
 
                                 <TextInput
@@ -647,10 +648,7 @@ export default function ImprovedCalendar() {
                                 />
 
                                 <TextInput
-                                    style={[
-                                        styles.modalInput,
-                                        { fontSize: dimensions.subtituloFontSize },
-                                    ]}
+                                    style={[styles.modalInput, { fontSize: dimensions.subtituloFontSize }]}
                                     placeholder="Hora (ej: 14:30)"
                                     value={eventTime}
                                     keyboardType="numeric"
@@ -658,8 +656,9 @@ export default function ImprovedCalendar() {
                                         const formatted = formatTimeInput(text);
                                         setEventTime(formatted);
                                     }}
-                                    maxLength={5} 
+                                    maxLength={5}
                                 />
+
                                 <Text style={[styles.sectionLabel, { fontSize: dimensions.subtituloFontSize }]}>Tipo de evento</Text>
                                 <View style={styles.eventTypeGrid}>
                                     {eventTypes.map((type) => (
@@ -702,12 +701,27 @@ export default function ImprovedCalendar() {
                         </ScrollView>
 
                         <View style={styles.modalActions}>
-                            <TouchableOpacity style={styles.cancelButton} onPress={() => setModalVisible(false)}>
-                                <Text style={[styles.cancelButtonText, { fontSize: dimensions.subtituloFontSize }]}>Cancelar</Text>
+                        
+
+                            <TouchableOpacity style={styles.cancelButton} onPress={() => {
+                                setModalVisible(false)
+                                resetForm()
+                            }}>
+                                <Text style={[styles.cancelButtonText, { fontSize: dimensions.subtituloFontSize }]}>
+                                    {editingEvent ? "Cancelar" : "Cerrar"}
+                                </Text>
                             </TouchableOpacity>
+
                             <TouchableOpacity
                                 style={[styles.saveButton, !eventTitle.trim() && styles.disabledButton]}
-                                onPress={saveEvent}
+                                onPress={() => {
+                                    saveEvent()
+                                    if (!editingEvent) {
+                                        // Si es nuevo evento, cerrar modal después de guardar
+                                        setModalVisible(false)
+                                        resetForm()
+                                    }
+                                }}
                                 disabled={!eventTitle.trim()}
                             >
                                 <Text style={[styles.saveButtonText, { fontSize: dimensions.subtituloFontSize }]}>
@@ -722,394 +736,4 @@ export default function ImprovedCalendar() {
     )
 }
 
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: "#f8fafc",
-    },
-    scrollView: {
-        flex: 1,
-    },
-    loadingContainer: {
-        flex: 1,
-        justifyContent: "center",
-        alignItems: "center",
-        backgroundColor: "#ffffff",
-        borderRadius: 16,
-        margin: 20,
-        padding: 40,
-    },
-    loadingText: {
-        marginTop: 16,
-        color: "#64748b",
-        textAlign: "center",
-    },
-    header: {
-        backgroundColor: "#ffffff",
-        borderRadius: 16,
-        padding: 20,
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 3.84,
-        elevation: 5,
-    },
-    headerContent: {
-        flexDirection: "row",
-        justifyContent: "space-between",
-        alignItems: "center",
-    },
-    headerTitle: {
-        fontWeight: "700",
-        color: "#1e293b",
-    },
-    headerSubtitle: {
-        color: "#64748b",
-        marginTop: 4,
-    },
-    addButton: {
-        backgroundColor: "#1e40af",
-        borderRadius: 12,
-        padding: 12,
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 2,
-        elevation: 3,
-    },
-    calendarHeader: {
-        flexDirection: "row",
-        justifyContent: "space-between",
-        alignItems: "center",
-        backgroundColor: "#ffffff",
-        borderRadius: 12,
-        paddingHorizontal: 16,
-        paddingVertical: 12,
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.05,
-        shadowRadius: 2,
-        elevation: 2,
-    },
-    navButton: {
-        padding: 8,
-        borderRadius: 8,
-        backgroundColor: "#f1f5f9",
-    },
-    monthTitle: {
-        fontWeight: "600",
-        color: "#1e293b",
-    },
-    calendarContainer: {
-        backgroundColor: "#ffffff",
-        borderRadius: 16,
-        padding: 16,
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.08,
-        shadowRadius: 4,
-        elevation: 3,
-    },
-    weekHeader: {
-        flexDirection: "row",
-        justifyContent: "space-around",
-        marginBottom: 12,
-    },
-    weekDay: {
-        alignItems: "center",
-        justifyContent: "center",
-        height: 30,
-    },
-    weekDayText: {
-        fontWeight: "600",
-        color: "#64748b",
-    },
-    calendarGrid: {
-        flexDirection: "row",
-        flexWrap: "wrap",
-        justifyContent: "space-around",
-    },
-    calendarDay: {
-        alignItems: "center",
-        justifyContent: "center",
-        marginBottom: 8,
-        borderRadius: 8,
-        position: "relative",
-    },
-    todayCell: {
-        backgroundColor: "#1e40af",
-    },
-    dayNumber: {
-        fontWeight: "500",
-        color: "#1e293b",
-    },
-    todayText: {
-        color: "#ffffff",
-        fontWeight: "700",
-    },
-    eventIndicator: {
-        position: "absolute",
-        bottom: 2,
-        flexDirection: "row",
-        alignItems: "center",
-    },
-    eventDot: {
-        width: 6,
-        height: 6,
-        borderRadius: 3,
-    },
-    eventCount: {
-        fontSize: 10,
-        color: "#64748b",
-        marginLeft: 2,
-        fontWeight: "500",
-    },
-    eventsSection: {
-        backgroundColor: "#ffffff",
-        borderRadius: 16,
-        padding: 20,
-        marginBottom: 20,
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.08,
-        shadowRadius: 4,
-        elevation: 3,
-    },
-    sectionTitle: {
-        fontWeight: "700",
-        color: "#1e293b",
-        marginBottom: 16,
-    },
-    emptyEvents: {
-        alignItems: "center",
-        paddingVertical: 40,
-    },
-    emptyEventsText: {
-        color: "#64748b",
-        marginTop: 12,
-        textAlign: "center",
-    },
 
-    eventCardContent: {
-        flexDirection: "row",
-        alignItems: "center",
-        padding: 16,
-    },
-    eventTypeIndicator: {
-        width: 4,
-        height: 40,
-        borderRadius: 2,
-        marginRight: 12,
-    },
-    eventInfo: {
-        flex: 1,
-    },
-    eventTitle: {
-        fontWeight: "600",
-        color: "#1e293b",
-        marginBottom: 4,
-    },
-    eventDate: {
-        color: "#64748b",
-        marginBottom: 4,
-    },
-    eventDescription: {
-        color: "#64748b",
-        lineHeight: 18,
-    },
-    deleteButton: {
-        padding: 8,
-    },
-    modalOverlay: {
-        flex: 1,
-        backgroundColor: "rgba(0, 0, 0, 0.5)",
-        justifyContent: "center",
-        alignItems: "center",
-    },
-    modalContent: {
-        backgroundColor: "#ffffff",
-        borderRadius: 20,
-        padding: 24,
-        maxHeight: height * 0.8,
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.25,
-        shadowRadius: 8,
-        elevation: 10,
-    },
-    modalHeader: {
-        flexDirection: "row",
-        justifyContent: "space-between",
-        alignItems: "center",
-        marginBottom: 20,
-    },
-    modalTitle: {
-        fontWeight: "700",
-        color: "#1e293b",
-    },
-    modalInput: {
-        borderWidth: 1,
-        borderColor: "#e2e8f0",
-        borderRadius: 12,
-        padding: 16,
-        marginBottom: 16,
-        backgroundColor: "#f8fafc",
-        color: "#1e293b",
-    },
-    modalTextArea: {
-        borderWidth: 1,
-        borderColor: "#e2e8f0",
-        borderRadius: 12,
-        padding: 16,
-        marginBottom: 16,
-        backgroundColor: "#f8fafc",
-        color: "#1e293b",
-        textAlignVertical: "top",
-        minHeight: 80,
-    },
-    eventTypeGrid: {
-        flexDirection: "row",
-        flexWrap: "wrap",
-        gap: 8,
-        marginBottom: 20,
-    },
-    eventTypeOption: {
-        flexDirection: "row",
-        alignItems: "center",
-        paddingHorizontal: 12,
-        paddingVertical: 8,
-        borderRadius: 20,
-        gap: 6,
-    },
-    selectedEventType: {
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 2,
-        elevation: 2,
-    },
-
-    selectedEventTypeText: {
-        color: "#ffffff",
-    },
-    selectedDateContainer: {
-        backgroundColor: "#f1f5f9",
-        borderRadius: 12,
-        padding: 16,
-        marginBottom: 20,
-    },
-    selectedDateText: {
-        color: "#1e293b",
-        fontWeight: "500",
-        textAlign: "center",
-    },
-    modalActions: {
-        flexDirection: "row",
-        gap: 12,
-        marginTop: 20,
-    },
-    cancelButton: {
-        flex: 1,
-        backgroundColor: "#f1f5f9",
-        paddingVertical: 14,
-        borderRadius: 12,
-        alignItems: "center",
-    },
-    cancelButtonText: {
-        color: "#64748b",
-        fontWeight: "600",
-    },
-    saveButton: {
-        flex: 1,
-        backgroundColor: "#1e40af",
-        paddingVertical: 14,
-        borderRadius: 12,
-        alignItems: "center",
-    },
-    disabledButton: {
-        backgroundColor: "#94a3b8",
-    },
-    saveButtonText: {
-        color: "#ffffff",
-        fontWeight: "600",
-    },
-    eventsContainer: {
-        marginTop: 16,
-        paddingHorizontal: 16,
-    },
-    sectionLabel: {
-        fontWeight: 'bold',
-        marginBottom: 16,
-        color: '#333',
-    },
-    eventCard: {
-        backgroundColor: 'white',
-        borderRadius: 12,
-        padding: 16,
-        marginBottom: 12,
-        shadowColor: '#000',
-        shadowOffset: {
-            width: 0,
-            height: 1,
-        },
-        shadowOpacity: 0.1,
-        shadowRadius: 2,
-        elevation: 2,
-    },
-    eventHeader: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginBottom: 12,
-    },
-    eventTypeContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-    },
-    eventIcon: {
-        marginRight: 6,
-    },
-    eventTypeText: {
-        fontWeight: '600',
-        fontSize: 14,
-    },
-    eventActions: {
-        flexDirection: 'row',
-    },
-    actionButton: {
-        padding: 6,
-        marginLeft: 8,
-        borderRadius: 20,
-        backgroundColor: '#f5f5f5',
-    },
-
-    eventContent: {
-        // Contenido del evento
-    },
-
-
-    eventTime: {
-        flexDirection: 'row',
-        alignItems: 'center',
-    },
-    eventTimeText: {
-        marginLeft: 6,
-        color: '#666',
-    },
-    eventSeparator: {
-        height: 1,
-        backgroundColor: '#eee',
-        marginVertical: 12,
-    },
-    emptyState: {
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: 40,
-    },
-    emptyStateText: {
-        marginTop: 12,
-        color: '#999',
-        fontSize: 16,
-    },
-
-})

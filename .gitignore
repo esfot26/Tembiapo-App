@@ -21,6 +21,10 @@ expo-env.d.ts
 # Metro
 .metro-health-check*
 
+#Credenciales 
+scr/services/FirebaseConfig.tsx
+
+
 # debug
 npm-debug.*
 yarn-debug.*
@@ -35,3 +39,4 @@ yarn-error.*
 
 # typescript
 *.tsbuildinfo
+.gitignore
