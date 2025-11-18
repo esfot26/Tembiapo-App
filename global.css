@@ -1,0 +1,86 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    @apply transition-colors duration-300;
+  }
+  :root {
+    /* === LIGHT THEME === */
+    --background: 225 60% 98%;
+    /* fondo azulado muy claro */
+    --foreground: 225 30% 12%;
+    /* texto principal oscuro-azulado */
+    --card: 0 0% 100%;
+    /* blanco puro para tarjetas */
+    --card-foreground: 225 30% 12%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 225 30% 12%;
+    --primary: 224 63% 40%;
+    /* azul principal */
+    --primary-foreground: 0 0% 100%;
+    --secondary: 224 45% 92%;
+    /* azul claro pastel */
+    --secondary-foreground: 225 35% 20%;
+    --muted: 225 40% 94%;
+    /* gris azulado tenue */
+    --muted-foreground: 225 20% 45%;
+    --accent: 224 63% 45%;
+    /* azul brillante de acento */
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 72% 60%;
+    /* rojo controlado */
+    --border: 225 25% 85%;
+    /* borde azul grisáceo */
+    --input: 225 25% 88%;
+    /* campos de entrada */
+    --ring: 224 63% 45%;
+    /* resalte de foco */
+    --radius: 0.625rem;
+
+    /* === CHART COLORS (modo claro) === */
+    --chart-1: 224 63% 45%;
+    --chart-2: 225 60% 55%;
+    --chart-3: 226 45% 65%;
+    --chart-4: 227 40% 75%;
+    --chart-5: 228 50% 35%;
+  }
+
+  .dark:root {
+    /* === DARK THEME === */
+    --background: 226 63% 12%;
+    /* #0C1634 */
+    --foreground: 225 38% 93%;
+    /* texto claro */
+    --card: 227 63% 18%;
+    /* #122251 */
+    --card-foreground: 225 50% 97%;
+    --popover: 227 61% 26%;
+    /* #182E6D */
+    --popover-foreground: 0 0% 100%;
+    --primary: 224 63% 40%;
+    /* #2547A7 */
+    --primary-foreground: 0 0% 100%;
+    --secondary: 226 63% 34%;
+    /* #1F3B8B */
+    --secondary-foreground: 225 55% 94%;
+    --muted: 227 63% 18%;
+    /* #122251 */
+    --muted-foreground: 225 25% 75%;
+    --accent: 224 63% 40%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 72% 64%;
+    --border: 227 61% 26%;
+    --input: 227 61% 26%;
+    --ring: 224 63% 45%;
+    --radius: 0.625rem;
+
+    /* === CHART COLORS (modo oscuro) === */
+    --chart-1: 224 63% 45%;
+    --chart-2: 226 63% 36%;
+    --chart-3: 227 63% 28%;
+    --chart-4: 228 63% 20%;
+    --chart-5: 224 63% 55%;
+  }
+}
