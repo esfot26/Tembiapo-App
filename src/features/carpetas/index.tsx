@@ -219,38 +219,49 @@ export default function CarpetaScreen({ padreId, path }: any) {
                 style={{
                     backgroundColor: colors.card,
                     borderColor: colors.border,
+                    paddingTop: insets.top + 4,
                 }}
             >
 
-                {path.length > 0 && (
-                    <TouchableOpacity
-                        onPress={handleBack}
-                        className="flex-row  gap-x-2 mt-4"
-                        activeOpacity={0.7}
-                    >
-                        <Ionicons name="arrow-back" size={22} color={colors.foreground} />
-                        <Text
-                            className="text-base font-semibold"
-                            style={{ color: colors.foreground }}
+                <View style={{ width: 64 }}>
+                    {path.length > 0 && (
+                        <TouchableOpacity
+                            onPress={handleBack}
+                            activeOpacity={0.7}
+                            style={{
+                                width: 36,
+                                height: 36,
+                                borderRadius: 18,
+                                justifyContent: "center",
+                                alignItems: "center",
+                                backgroundColor: colors.background,
+                                borderWidth: 1,
+                                borderColor: colors.border,
+                                shadowOpacity: 0.12,
+                                shadowRadius: 4,
+                                shadowOffset: { width: 0, height: 2 },
+                                elevation: 2,
+                            }}
                         >
-                            Atrás
-                        </Text>
-                    </TouchableOpacity>
-                )}
+                            <Ionicons name="arrow-back" size={20} color={colors.foreground} />
+                        </TouchableOpacity>
+                    )}
+                </View>
 
                 {/* Título centrado */}
-                <View className="flex-1 p-2 gap-20 mt-4 " >
+                <View style={{ flex: 1, alignItems: "center", paddingVertical: 8 }}>
                     <Text
                         numberOfLines={1}
+                        ellipsizeMode="tail"
                         className="text-xl font-bold"
-                        style={{ color: colors.foreground }}
+                        style={{ color: colors.foreground, textAlign: "center" }}
                     >
                         {path.length === 0 ? "Mis carpetas" : path[path.length - 1].name}
                     </Text>
                 </View>
 
-                {/* Espaciador para centrar el título cuando no hay botón atrás */}
-                {path.length === 0 && <View style={{ width: 50 }} />}
+                {/* Espaciador derecho para centrar el título */}
+                <View style={{ width: 64 }} />
             </View>
 
             {/* Contenido principal */}

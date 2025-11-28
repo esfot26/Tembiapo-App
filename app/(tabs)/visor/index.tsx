@@ -4,6 +4,7 @@ import { View, ActivityIndicator, TouchableOpacity, Text } from "react-native";
 import { WebView } from "react-native-webview";
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTheme } from "@/src/contexts/TemaContext";
 
 export default function VisorArchivo() {
@@ -11,18 +12,18 @@ export default function VisorArchivo() {
     const router = useRouter();
 
     const { colors } = useTheme();
+    const insets = useSafeAreaInsets();
     const rawUrl = String(url ?? "");
     const m = String(mimeType ?? "").toLowerCase();
     const ext = rawUrl.split("?")[0].split(".").pop()?.toLowerCase() ?? "";
     const isPdf = m.includes("pdf") || ext === "pdf";
-    const isOffice = ["doc","docx","ppt","pptx","xls","xlsx"].includes(ext) ||
+    const isOffice = ["doc", "docx", "ppt", "pptx", "xls", "xlsx"].includes(ext) ||
         m.includes("msword") || m.includes("officedocument") || m.includes("powerpoint") || m.includes("excel");
     const [pdfFallback, setPdfFallback] = useState(false);
 
-
     const handleBack = () => {
         if (padreId) {
-            // ✅ Volver a la carpeta anterior
+
             router.replace({
                 pathname: "/(tabs)/carpeta",
                 params: {
@@ -55,7 +56,8 @@ export default function VisorArchivo() {
                 style={{
                     flexDirection: "row",
                     alignItems: "center",
-                    paddingVertical: 32,
+                    paddingTop: insets.top + 4,
+                    paddingBottom: 10,
                     paddingHorizontal: 16,
                     backgroundColor: colors.background,
                     elevation: 4,
@@ -63,15 +65,30 @@ export default function VisorArchivo() {
             >
                 <TouchableOpacity
                     onPress={handleBack}
-                    style={{ flexDirection: "row", alignItems: "center", gap: 6 }}
+                    activeOpacity={0.7}
+                    style={{
+                        width: 36,
+                        height: 36,
+                        borderRadius: 18,
+                        justifyContent: "center",
+                        alignItems: "center",
+                        backgroundColor: colors.background,
+                        borderWidth: 1,
+                        borderColor: colors.border,
+                        shadowOpacity: 0.12,
+                        shadowRadius: 4,
+                        shadowOffset: { width: 0, height: 2 },
+                        elevation: 2,
+                    }}
                 >
-                    <Ionicons name="arrow-back" size={24} 
-                    style={{ color: colors.foreground }}
-                    />
-                    <Text style={{ color: colors.foreground, fontWeight: "bold", fontSize: 16 }}>
-                        {nombre ? nombre.slice(0, 30) : "Archivo"}
-                    </Text>
+                    <Ionicons name="arrow-back" size={22} style={{ color: colors.foreground }} />
                 </TouchableOpacity>
+                <View style={{ flex: 1, alignItems: "center" }}>
+                    <Text numberOfLines={1} ellipsizeMode="tail" style={{ color: colors.foreground, fontSize: 16, fontWeight: "700" }}>
+                        {typeof nombre === "string" && nombre.length > 0 ? nombre : "Archivo"}
+                    </Text>
+                </View>
+                <View style={{ width: 36 }} />
             </View>
 
             {/* WebView */}

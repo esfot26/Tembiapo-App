@@ -8,7 +8,8 @@ import {
   StyleSheet,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { router, useLocalSearchParams, useNavigation } from "expo-router";
+import { Link, router, useLocalSearchParams } from "expo-router";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTheme } from "@/src/contexts/TemaContext";
 import { Nota, Prioridad } from "@/src/services/NotasServices";
 import { useNotas } from "@/src/contexts/NotasContext";
@@ -18,7 +19,7 @@ export default function NotaEditorModal() {
   const { colors } = useTheme();
   const { crearNota, actualizarNota } = useNotas();
   const params = useLocalSearchParams();
-  const navigation = useNavigation();
+  const insets = useSafeAreaInsets();
   const [nota, setNota] = useState<Partial<Nota> | null>(null);
 
   const [titulo, setTitulo] = useState("");
@@ -43,15 +44,6 @@ export default function NotaEditorModal() {
       setCategoria(notaParseada.categoria);
       setPrioridad(notaParseada.prioridad);
     }
-    const isEdit = (() => {
-      try {
-        const n = params.nota ? (JSON.parse(params.nota as string) as Partial<Nota>) : null;
-        return !!(n && n.id);
-      } catch {
-        return false;
-      }
-    })();
-    (navigation as any).setOptions({ headerTitle: isEdit ? "Editar Nota" : "Nueva Nota" });
   }, [params.nota]);
 
   const handleSave = async () => {
@@ -61,7 +53,7 @@ export default function NotaEditorModal() {
     } else {
       await crearNota(notaData);
     }
-    router.back();
+    router.replace("/(tabs)/notas");
 
   };
 
@@ -165,24 +157,31 @@ export default function NotaEditorModal() {
         style={{
           backgroundColor: colors.card,
           borderColor: colors.border,
+          paddingTop: insets.top + 4,
         }}
       >
         <TouchableOpacity
           onPress={handleBack}
-          className="flex-row  gap-x-2 mt-4"
           activeOpacity={0.7}
-
+          style={{
+            width: 36,
+            height: 36,
+            borderRadius: 18,
+            justifyContent: "center",
+            alignItems: "center",
+            backgroundColor: colors.background,
+            borderWidth: 1,
+            borderColor: colors.border,
+            shadowOpacity: 0.12,
+            shadowRadius: 4,
+            shadowOffset: { width: 0, height: 2 },
+            elevation: 2,
+          }}
         >
           <Ionicons name="arrow-back" size={20} color={colors.foreground} />
-          <Text
-            className="text-base font-semibold"
-            style={{ color: colors.foreground }}
-          >
-            Atrás
-          </Text>
         </TouchableOpacity>
-        <View style={{ flex: 1, alignItems: "center" }}>
-          <Text style={{ color: colors.foreground, fontSize: 18, fontWeight: "700" }}>
+        <View style={{ flex: 1, alignItems: "center", padding: 12 }}>
+          <Text numberOfLines={1} ellipsizeMode="tail" style={{ color: colors.foreground, fontSize: 18, fontWeight: "700", marginLeft: 12 }}>
             {isEdit ? "Editar Nota" : "Agregar nueva nota"}
           </Text>
         </View>

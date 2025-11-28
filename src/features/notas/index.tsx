@@ -1,14 +1,15 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   Text,
   View,
   TouchableOpacity,
   Alert,
+  RefreshControl,
 } from "react-native";
 import { FlashList } from "@shopify/flash-list";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Animated, { FadeInUp, FadeOutDown } from "react-native-reanimated";
-import { router, useNavigation } from "expo-router";
+import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "@/src/contexts/TemaContext";
 import { useNotas } from "@/src/contexts/NotasContext";
@@ -18,16 +19,22 @@ import { NotaListSkeleton } from "@/components/ui/skeleton";
 export default function NotasScreen() {
   const { colors } = useTheme();
   const { notas, loading, cargarNotas, eliminarNota, actualizarNota } = useNotas();
-  const navigation = useNavigation();
   const insets = useSafeAreaInsets();
+  const [refreshing, setRefreshing] = useState(false);
 
+  const didLoadRef = useRef(false);
   useEffect(() => {
-    const unsubscribe = navigation.addListener("focus", () => {
+    if (!didLoadRef.current) {
+      didLoadRef.current = true;
       cargarNotas();
-    });
+    }
+  }, [cargarNotas]);
 
-    return unsubscribe;
-  }, [navigation, cargarNotas]);
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await cargarNotas();
+    setRefreshing(false);
+  };
 
   const handleEdit = (nota: Nota) => {
     router.push({
@@ -263,7 +270,7 @@ export default function NotasScreen() {
         </TouchableOpacity>
       </View>
 
-      {loading ? (
+      {loading && notas.length === 0 ? (
         <NotaListSkeleton count={4} />
       ) : (
         <FlashList
@@ -272,6 +279,14 @@ export default function NotasScreen() {
           keyExtractor={(item) => item.id}
           //estimatedItemSize={180}
           contentContainerStyle={{ paddingVertical: 0 }}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={handleRefresh}
+              tintColor={colors.primary}
+              colors={[colors.primary]}
+            />
+          }
           ListEmptyComponent={() => (
             <View className="items-center mt-20 px-4">
               <Ionicons name="document-text-outline" size={48} color={colors.mutedForeground} />

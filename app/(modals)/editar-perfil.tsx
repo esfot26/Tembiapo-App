@@ -263,15 +263,36 @@ export default function EditarPerfil() {
 
   return (
     <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
+      <View className="flex-row items-center justify-between p-4">
+        <TouchableOpacity
+          onPress={() => router.replace("/(tabs)/configuracion")}
+          activeOpacity={0.7}
+          style={{
+            width: 36,
+            height: 36,
+            borderRadius: 18,
+            justifyContent: "center",
+            alignItems: "center",
+            backgroundColor: colors.background,
+            borderWidth: 1,
+            borderColor: colors.border,
+            shadowOpacity: 0.12,
+            shadowRadius: 4,
+            shadowOffset: { width: 0, height: 2 },
+            elevation: 2,
+          }}
+        >
+          <Ionicons name="arrow-back" size={width * 0.08} color={colors.foreground} />
+        </TouchableOpacity>
+        <View style={{ flex: 1, alignItems: "center", padding: 12 }}>
+          <Text numberOfLines={1} ellipsizeMode="tail" style={{ color: colors.foreground, fontSize: 18, fontWeight: "700", marginLeft: 12 }}>
+            Editar Perfil
+          </Text>
+        </View>
+        <View style={{ width: 80 }} />
+      </View>
       <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={styles.keyboardView}>
         <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-          {/* Avatar */}
-          <View style={styles.avatarContainer}>
-            {/* <View style={[styles.avatar, { backgroundColor: colors.card, borderColor: colors.border }]}>
-              <Ionicons name="person" size={width * 0.15} color={colors.textSecondary} />
-            </View> */}
-
-          </View>
 
           {/* Formulario */}
           <View style={[styles.formContainer, { backgroundColor: colors.card, shadowColor: colors.border }]}>
@@ -397,7 +418,7 @@ export default function EditarPerfil() {
 const styles = StyleSheet.create({
   safeArea: { flex: 1 },
   keyboardView: { flex: 1 },
-  scrollView: { flex: 1 },
+  scrollView: { flex: 1},
   scrollContent: { paddingHorizontal: width * 0.05, paddingBottom: height * 0.05 },
   avatarContainer: { alignItems: "center", marginVertical: height * 0.03 },
   avatar: {
