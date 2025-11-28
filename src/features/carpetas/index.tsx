@@ -22,6 +22,7 @@ import { Progress } from "@/components/ui/progress";
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ModalPermisos } from "@/components/ui/modalPermisos";
+import { FolderListSkeleton } from "@/components/ui/skeleton";
 
 
 export default function CarpetaScreen({ padreId, path }: any) {
@@ -155,9 +156,13 @@ export default function CarpetaScreen({ padreId, path }: any) {
                         } else {
                             router.push({
                                 pathname: "/(tabs)/visor",
-                                params: { url: item.url, nombre: item.nombre },
-                                // padreId: padreId ?? " ",
-                                // path: JSON.stringify(path ?? []), // ❌ removido – no es parte de la ruta
+                                params: {
+                                    url: item.url,
+                                    nombre: item.nombre,
+                                    mimeType: item.mimeType,
+                                    padreId: padreId ?? "",
+                                    path: JSON.stringify(path ?? []),
+                                },
                             });
                         }
                     }}
@@ -250,12 +255,7 @@ export default function CarpetaScreen({ padreId, path }: any) {
 
             {/* Contenido principal */}
             {loading ? (
-                <View className="flex-1 justify-center items-center py-8">
-                    <ActivityIndicator size="large" color={colors.primary} />
-                    <Text style={{ color: colors.mutedForeground }} className="mt-3">
-                        Cargando contenido...
-                    </Text>
-                </View>
+                <FolderListSkeleton count={6} />
             ) : (
                 <FlatList
                     data={combinedData}

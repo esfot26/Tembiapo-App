@@ -5,6 +5,7 @@ import { View, ActivityIndicator } from "react-native";
 import { ActiveScreenProvider } from "@/src/contexts/ActiveScreenContext";
 import { AuthProvider, useAuth } from "@/src/contexts/AuthContext";
 import { ThemeProvider, useTheme } from "@/src/contexts/TemaContext";
+import { NotasProvider } from "@/src/contexts/NotasContext";
 import { PortalHost } from "@rn-primitives/portal";
 import Toast from "react-native-toast-message";
 
@@ -64,9 +65,11 @@ export default function RootLayout() {
     <ThemeProvider>
       <ActiveScreenProvider>
         <AuthProvider>
-          <LayoutContent />
-          <PortalHost />
-          <Toast />
+          <NotasProvider>
+            <LayoutContent />
+            <PortalHost />
+            <Toast />
+          </NotasProvider>
         </AuthProvider>
       </ActiveScreenProvider>
     </ThemeProvider>

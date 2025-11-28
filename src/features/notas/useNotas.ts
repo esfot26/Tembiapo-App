@@ -26,12 +26,28 @@ export const useNotas = () => {
   }, []);
 
   const crearNota = async (notaData: NotaData) => {
-    setLoading(true);
-    try {
-      const nuevaNota = await NotasService.crearNota(notaData);
-      setNotas((prev) => [...prev, nuevaNota as unknown as Nota]);
+    // 🚀 Optimistic Update: Crear nota temporal
+    const tempId = `temp_${Date.now()}_${Math.floor(Math.random() * 1000000)}`;
+    const tempNota: Nota = {
+      id: tempId,
+      ...notaData,
+      completado: false,
+      creadorId: "temp", // Se reemplazará con el real
+      fechaCreacion: { toDate: () => new Date() } as any, // Timestamp temporal
+    };
 
-      await cargarNotas(); // Recargar la lista de notas
+    // ✅ Agregar inmediatamente a la UI
+    setNotas((prev) => [tempNota, ...prev]);
+
+    try {
+      // 📡 Guardar en Firebase en segundo plano
+      const nuevaNota = await NotasService.crearNota(notaData);
+
+      // 🔄 Reemplazar nota temporal con nota real
+      setNotas((prev) =>
+        prev.map((n) => (n.id === tempId ? (nuevaNota as unknown as Nota) : n))
+      );
+
       Toast.show({
         type: "success",
         text1: "¡Nota creada!",
@@ -42,13 +58,15 @@ export const useNotas = () => {
       });
     } catch (error) {
       console.error("Error al crear la nota:", error);
+
+      // ❌ Rollback: Remover nota temporal
+      setNotas((prev) => prev.filter((n) => n.id !== tempId));
+
       Toast.show({
         type: "error",
         text1: "Error",
         text2: "No se pudo crear la nota.",
       });
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -56,10 +74,22 @@ export const useNotas = () => {
     notaId: string,
     updates: Partial<Omit<Nota, "id" | "creadorId" | "fechaCreacion">>
   ) => {
-    setLoading(true);
+    // 💾 Guardar nota original para rollback
+    const notaOriginal = notas.find((n) => n.id === notaId);
+    if (!notaOriginal) return;
+
+    // ✅ Actualizar inmediatamente en la UI
+    setNotas((prev) =>
+      prev.map((n) => (n.id === notaId ? { ...n, ...updates } : n))
+    );
+
     try {
+      // 📡 Actualizar en Firebase en segundo plano
       await NotasService.actualizarNota(notaId, updates);
-      await cargarNotas(); // Recargar la lista de notas
+
+      // 🔄 Recargar notas para sincronizar con Firebase
+      await cargarNotas();
+
       Toast.show({
         type: "success",
         text1: "Nota Actualizada",
@@ -67,42 +97,55 @@ export const useNotas = () => {
       });
     } catch (error) {
       console.error("Error al actualizar la nota:", error);
+
+      // ❌ Rollback: Restaurar nota original
+      setNotas((prev) =>
+        prev.map((n) => (n.id === notaId ? notaOriginal : n))
+      );
+
       Toast.show({
         type: "error",
         text1: "Error",
         text2: "No se pudo actualizar la nota.",
       });
-    } finally {
-      setLoading(false);
     }
   };
 
   const eliminarNota = async (notaId: string) => {
-    setLoading(true);
+    // 💾 Guardar nota para rollback
+    const notaEliminada = notas.find((n) => n.id === notaId);
+    if (!notaEliminada) return;
+
+    // ✅ Remover inmediatamente de la UI
+    setNotas((prev) => prev.filter((n) => n.id !== notaId));
+
     try {
+      // 📡 Eliminar en Firebase en segundo plano
       await NotasService.eliminarNota(notaId);
-      await cargarNotas();
+
       Toast.show({
         type: "success",
         text1: "Nota eliminada",
         text2: "La nota fue eliminada correctamente.",
-        visibilityTime: 3000,
+        //visibilityTime: 3000,
         autoHide: true,
         topOffset: 50,
         position: "top",
       });
     } catch (error) {
       console.error("Error al eliminar la nota:", error);
+
+      // ❌ Rollback: Restaurar nota
+      setNotas((prev) => [notaEliminada, ...prev]);
+
       Toast.show({
         type: "error",
         text1: "Error",
         text2: "No se pudo eliminar la nota.",
-        visibilityTime: 2500,
+        //visibilityTime: 2500,
         autoHide: true,
         topOffset: 60,
       });
-    } finally {
-      setLoading(false);
     }
   };
 

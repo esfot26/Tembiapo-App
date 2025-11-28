@@ -46,18 +46,19 @@ export const NotasService = {
         );
     },
 
-    async crearNota(notaData: NotaData): Promise<string> {
+    async crearNota(notaData: NotaData): Promise<Nota> {
         const user = FIREBASE_AUTH.currentUser;
         if (!user) throw new Error("Usuario no autenticado.");
 
         const notasCollection = getNotasCollection();
-        const docRef = await addDoc(notasCollection, {
+        const payload = {
             ...notaData,
             completado: false,
             fechaCreacion: Timestamp.now(),
             creadorId: user.uid,
-        });
-        return docRef.id;
+        };
+        const docRef = await addDoc(notasCollection, payload);
+        return { id: docRef.id, ...payload } as Nota;
     },
 
     async actualizarNota(

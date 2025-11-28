@@ -11,7 +11,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { router, useLocalSearchParams, useNavigation } from "expo-router";
 import { useTheme } from "@/src/contexts/TemaContext";
 import { Nota, Prioridad } from "@/src/services/NotasServices";
-import { useNotas } from "@/src/features/notas/useNotas";
+import { useNotas } from "@/src/contexts/NotasContext";
 
 
 export default function NotaEditorModal() {
@@ -25,6 +25,14 @@ export default function NotaEditorModal() {
   const [descripcion, setDescripcion] = useState("");
   const [categoria, setCategoria] = useState("");
   const [prioridad, setPrioridad] = useState<Prioridad>("baja");
+  const isEdit = (() => {
+    try {
+      const n = params.nota ? (JSON.parse(params.nota as string) as Partial<Nota>) : null;
+      return !!(n && n.id);
+    } catch {
+      return false;
+    }
+  })();
 
   useEffect(() => {
     if (params.nota) {
@@ -145,98 +153,135 @@ export default function NotaEditorModal() {
     );
   };
 
+  const handleBack = () => {
+    router.replace("/(tabs)/notas");
+  }
+
+
   return (
-    <ScrollView
-      style={{ flex: 1, backgroundColor: colors.background }}
-      contentContainerStyle={{ padding: 16, paddingBottom: 40 }}
-      showsVerticalScrollIndicator={false}
-    >
-      {/* --- TITULO --- */}
-      <Text style={[styles.label, { color: colors.foreground }]}>Título</Text>
-      <TextInput
-        value={titulo}
-        onChangeText={setTitulo}
-        style={[
-          styles.input,
-          {
-            backgroundColor: colors.card,
-            color: colors.foreground,
-            borderColor: colors.border,
-          },
-        ]}
-        placeholder="Título de la nota"
-        placeholderTextColor={colors.mutedForeground}
-      />
-
-      {/* --- DESCRIPCION --- */}
-      <Text style={[styles.label, { color: colors.foreground }]}>Descripción</Text>
-      <TextInput
-        value={descripcion}
-        onChangeText={setDescripcion}
-        style={[
-          styles.input,
-          styles.multilineInput,
-          {
-            backgroundColor: colors.card,
-            color: colors.foreground,
-            borderColor: colors.border,
-          },
-        ]}
-        placeholder="Descripción..."
-        placeholderTextColor={colors.mutedForeground}
-        multiline
-      />
-
-      {/* --- CATEGORIA --- */}
-      <Text style={[styles.label, { color: colors.foreground }]}>Categoría</Text>
-      {renderCategoriaSelector()}
-
-      {/* --- PRIORIDAD --- */}
-      <Text style={[styles.label, { color: colors.foreground }]}>Prioridad</Text>
-      {renderPrioridadSelector()}
-
-      {/* --- BOTONES --- */}
+    <View style={{ flex: 1, backgroundColor: colors.background }}>
       <View
+        className="flex-row items-center justify-between px-4 py-3 border-b shadow-sm"
         style={{
-          marginTop: 28,
-          flexDirection: "row",
-          gap: 12,
+          backgroundColor: colors.card,
+          borderColor: colors.border,
         }}
       >
-        {/* GUARDAR */}
         <TouchableOpacity
-          onPress={handleSave}
-          activeOpacity={0.9}
-          style={[
-            styles.actionButton,
-            {
-              backgroundColor: colors.primary,
-              shadowColor: colors.primary,
-            },
-          ]}
-        >
-          <Ionicons name="save-outline" size={22} color="white" />
-          <Text style={styles.actionText}>Guardar</Text>
-        </TouchableOpacity>
+          onPress={handleBack}
+          className="flex-row  gap-x-2 mt-4"
+          activeOpacity={0.7}
 
-        {/* CANCELAR */}
-        <TouchableOpacity
-          onPress={() => router.back()}
-          //activeOpacity={0.9}
-          style={[
-            styles.actionButton,
-            {
-              backgroundColor: colors.destructive,
-              shadowColor: colors.destructive,
-            },
-          ]}
         >
-          <Ionicons name="close-circle-outline" size={22} color="white" />
-          <Text style={styles.actionText}>Cancelar</Text>
+          <Ionicons name="arrow-back" size={20} color={colors.foreground} />
+          <Text
+            className="text-base font-semibold"
+            style={{ color: colors.foreground }}
+          >
+            Atrás
+          </Text>
         </TouchableOpacity>
+        <View style={{ flex: 1, alignItems: "center" }}>
+          <Text style={{ color: colors.foreground, fontSize: 18, fontWeight: "700" }}>
+            {isEdit ? "Editar Nota" : "Agregar nueva nota"}
+          </Text>
+        </View>
+        <View style={{ width: 80 }} />
       </View>
-    </ScrollView>
 
+      <ScrollView
+        style={{ flex: 1 }}
+        contentContainerStyle={{ padding: 16, paddingBottom: 40 }}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* --- TITULO --- */}
+        <Text style={[styles.label, { color: colors.foreground }]}>Título</Text>
+        <TextInput
+          value={titulo}
+          onChangeText={setTitulo}
+          style={[
+            styles.input,
+            {
+              backgroundColor: colors.card,
+              color: colors.foreground,
+              borderColor: colors.border,
+            },
+          ]}
+          placeholder="Título de la nota"
+          placeholderTextColor={colors.mutedForeground}
+        />
+
+        {/* --- DESCRIPCION --- */}
+        <Text style={[styles.label, { color: colors.foreground }]}>Descripción</Text>
+        <TextInput
+          value={descripcion}
+          onChangeText={setDescripcion}
+          style={[
+            styles.input,
+            styles.multilineInput,
+            {
+              backgroundColor: colors.card,
+              color: colors.foreground,
+              borderColor: colors.border,
+            },
+          ]}
+          placeholder="Descripción..."
+          placeholderTextColor={colors.mutedForeground}
+          multiline
+        />
+
+        {/* --- CATEGORIA --- */}
+        <Text style={[styles.label, { color: colors.foreground }]}>Categoría</Text>
+        {renderCategoriaSelector()}
+
+        {/* --- PRIORIDAD --- */}
+        <Text style={[styles.label, { color: colors.foreground }]}>Prioridad</Text>
+        {renderPrioridadSelector()}
+
+        {/* --- BOTONES --- */}
+        <View
+          style={{
+            marginTop: 28,
+            flexDirection: "row",
+            gap: 12,
+          }}
+        >
+          {/* GUARDAR */}
+          <TouchableOpacity
+            onPress={handleSave}
+            activeOpacity={0.9}
+            style={[
+              styles.actionButton,
+              {
+                backgroundColor: colors.primary,
+                shadowColor: colors.primary,
+              },
+            ]}
+          >
+            <Ionicons name="save-outline" size={22} color="white" />
+            <Text style={styles.actionText}>Guardar</Text>
+          </TouchableOpacity>
+
+          {/* CANCELAR */}
+          <TouchableOpacity
+            onPress={handleBack}
+            //activeOpacity={0.9}
+            style={[
+              styles.actionButton,
+              {
+                backgroundColor: colors.destructive,
+                shadowColor: colors.destructive,
+              },
+            ]}
+          >
+            <Ionicons name="close-circle-outline" size={22} color="white" />
+            <Text style={styles.actionText}
+
+            >Cancelar</Text>
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
+    </View>
   );
 }
 
