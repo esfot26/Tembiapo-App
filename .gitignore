@@ -25,10 +25,10 @@ src/services/FirebaseConfig.tsx
 
 
 
-**/project_analysis.json
-**/google-services.json
-**/GoogleService-Info.plist
-**/firestore.rules
+/project_analysis.json
+/google-services.json
+/GoogleService-Info.plist
+/firestore.rules
 
 # Metro
 .metro-health-check*
