@@ -39,6 +39,7 @@ function LayoutContent() {
         >
           <Stack.Screen name="(auth)/login/index" />
           <Stack.Screen name="(auth)/registro/index" />
+          <Stack.Screen name="(auth)/verificar-correo/verificarCorreo" />
         </Stack>
         <StatusBar style={theme === "dark" ? "light" : "dark"} />
       </>

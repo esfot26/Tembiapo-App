@@ -30,12 +30,12 @@ export const LoginLogic = () => {
         webClientId: "63825210908-o3p1o3roiicj908n6mfouslrcfhoki0u.apps.googleusercontent.com",
     });
 
-    // 🔹 Guardar solo UID (compatible con AuthContext)
+    // Guardar solo UID
     const guardarUID = async (uid: string) => {
         await SecureStore.setItemAsync("uid", uid);
     };
 
-    // 🔹 Crear doc usuario si no existe
+    // Crear doc usuario si no existe (para Google)
     const crearUsuarioEnFirestore = async (firebaseUser: any) => {
         try {
             const userDocRef = doc(FIREBASE_DB, "usuarios", firebaseUser.uid);
@@ -58,7 +58,9 @@ export const LoginLogic = () => {
         }
     };
 
-    // 🔹 Login con email y contraseña
+    // ---------------------------------------------
+    // 🔥 LOGIN CON EMAIL - CORREGIDO
+    // ---------------------------------------------
     const handleLogin = async () => {
         try {
             setLoading(true);
@@ -66,10 +68,23 @@ export const LoginLogic = () => {
             const resp = await signInWithEmailAndPassword(FIREBASE_AUTH, email, password);
             const user = resp.user;
 
+            // 🚨 BLOQUEAR SI EL CORREO NO ESTÁ VERIFICADO
+            if (!user.emailVerified) {
+                Toast.show({
+                    type: "info",
+                    text1: "Verifica tu cuenta",
+                    text2: "Revisa tu correo antes de iniciar sesión.",
+                });
+
+                router.replace("/(auth)/verificar-correo/verificarCorreo");
+                return;
+            }
+
             await guardarUID(user.uid);
             await crearUsuarioEnFirestore(user);
 
             router.replace("/(tabs)/inicio");
+
         } catch (error: any) {
             console.log("Error al iniciar sesión:", error);
             Toast.show({
@@ -82,7 +97,9 @@ export const LoginLogic = () => {
         }
     };
 
-    // 🔹 Login Google
+    // ---------------------------------------------
+    // 🔵 LOGIN CON GOOGLE - SIN BLOQUEO (Google ya viene verificado)
+    // ---------------------------------------------
     const handleLoginGoogle = async () => {
         try {
             setLoading(true);

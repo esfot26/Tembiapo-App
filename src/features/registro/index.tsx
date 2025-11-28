@@ -16,8 +16,6 @@ import ContraseñaButton from "@/components/ui/ContraseñaButton";
 import BotonCustom from "@/components/ui/BotonCustom";
 import { RegistroLogic } from "./registro.hook";
 
-// 👇 Importamos la lógica
-
 
 export default function RegistroScreen() {
     const router = useRouter();

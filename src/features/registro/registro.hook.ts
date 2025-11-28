@@ -9,9 +9,15 @@ import {
     validarTelefono,
     validarFecha,
 } from "@/src/utils/validacion";
+
 import { doc, setDoc } from "firebase/firestore";
 import { FIREBASE_DB, FIREBASE_AUTH } from "@/src/services/FirebaseConfig";
-import { createUserWithEmailAndPassword } from "firebase/auth";
+
+import {
+    createUserWithEmailAndPassword,
+    sendEmailVerification,
+} from "firebase/auth";
+
 import Toast from "react-native-toast-message";
 import * as SecureStore from "expo-secure-store";
 import { useRouter } from "expo-router";
@@ -38,7 +44,7 @@ export const RegistroLogic = () => {
     const crearCuenta = async () => {
         const campos = { email, password, nombreCompleto, telefono, fechaNacimiento, username };
 
-        // 🔹 Validación general
+        // Validación general
         const errorCampos = validarCamposObligatorios(campos);
         if (errorCampos) {
             Toast.show({
@@ -49,7 +55,7 @@ export const RegistroLogic = () => {
             return;
         }
 
-        // 🔹 Validaciones específicas
+        // Validaciones específicas
         const validaciones = [
             validarEmail(email),
             validarContraseña(password),
@@ -68,7 +74,7 @@ export const RegistroLogic = () => {
             return;
         }
 
-        // 🔹 Confirmación de contraseñas
+        // Confirmación de contraseñas
         if (password !== confirmPassword) {
             Toast.show({
                 type: "error",
@@ -81,15 +87,20 @@ export const RegistroLogic = () => {
         setIsLoading(true);
 
         try {
-            // 🟣 Crear usuario Firebase Auth
-            const resp = await createUserWithEmailAndPassword(FIREBASE_AUTH, email, password);
-            const usuario = resp.user;
+            // Crear usuario Firebase Auth
+            const resp = await createUserWithEmailAndPassword(
+                FIREBASE_AUTH,
+                email,
+                password
+            );
 
-            // 🔵 Guardar UID en SecureStore (NO GUARDAR EL OBJETO USER)
-            await guardarUID(usuario.uid);
+            const user = resp.user;
 
-            // 🟢 Crear documento Firestore
-            await setDoc(doc(FIREBASE_DB, "usuarios", usuario.uid), {
+            // Guardar UID
+            await guardarUID(user.uid);
+
+            // Guardar documento Firestore
+            await setDoc(doc(FIREBASE_DB, "usuarios", user.uid), {
                 email: email.toLowerCase(),
                 username: username.trim(),
                 nombreCompleto: nombreCompleto.trim(),
@@ -100,14 +111,18 @@ export const RegistroLogic = () => {
                 creado: new Date().toISOString(),
             });
 
+            // 🔥 ENVIAR VERIFICACIÓN DE CORREO
+            await sendEmailVerification(user);
+
             Toast.show({
                 type: "success",
                 text1: "Cuenta creada 🎉",
-                text2: "Tu cuenta se creó exitosamente.",
+                text2: "Te enviamos un correo para verificar tu cuenta.",
             });
 
-            // 🔥 Redirigir al usuario al Home (Tabs)
-            router.replace("/(tabs)/inicio");
+            // 👉 Enviar a pantalla de verificación
+            router.replace("/(auth)/verificar-correo/verificarCorreo");
+
         } catch (error: any) {
             const errorMessage = error.code
                 ? error.code.replace("auth/", "").split("-").join(" ")

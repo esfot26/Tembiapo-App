@@ -20,7 +20,8 @@ import { Stack, useRouter } from "expo-router";
 import { useTheme } from "@/src/contexts/TemaContext";
 import { useAuth } from "@/src/contexts/AuthContext";
 import { getAuth, signOut } from "firebase/auth";
-import { FIREBASE_APP } from "@/src/services/FirebaseConfig";
+import { FIREBASE_APP, FIREBASE_DB } from "@/src/services/FirebaseConfig";
+import { doc, getDoc } from "firebase/firestore";
 import Toast from "react-native-toast-message";
 
 export default function ConfiguracionScreen() {
@@ -28,6 +29,23 @@ export default function ConfiguracionScreen() {
     const { usuario } = useAuth();
     const router = useRouter();
     const auth = getAuth(FIREBASE_APP);
+    const [perfil, setPerfil] = React.useState<any | null>(null);
+
+    React.useEffect(() => {
+        const cargarPerfil = async () => {
+            try {
+                if (!usuario?.uid) return;
+                const ref = doc(FIREBASE_DB, "usuarios", usuario.uid);
+                const snap = await getDoc(ref);
+                if (snap.exists()) {
+                    setPerfil(snap.data());
+                }
+            } catch (e) {
+                console.log("Error cargando perfil:", e);
+            }
+        };
+        cargarPerfil();
+    }, [usuario?.uid]);
 
     // 🔹 Cerrar sesión
     const handleLogout = async () => {
@@ -79,30 +97,16 @@ export default function ConfiguracionScreen() {
                         ]}
                     >
                         <Text style={styles.avatarText}>
-                            {usuario?.displayName?.charAt(0).toUpperCase() || "U"}
+                            {(perfil?.nombreCompleto?.charAt(0) || usuario?.displayName?.charAt(0) || "U").toUpperCase()}
                         </Text>
                     </View>
                     <Text style={[styles.name, { color: colors.foreground }]}>
-                        {usuario?.displayName || "Usuario"}
+                        {perfil?.nombreCompleto || usuario?.displayName || "Usuario"}
                     </Text>
                     <Text style={[styles.email, { color: colors.foreground }]}>
-                        {usuario?.email || ""}
+                        {perfil?.email || usuario?.email || ""}
                     </Text>
                 </View>
-
-                {/* STATS */}
-                {/* <View
-                    style={[
-                        styles.statsRow,
-                        { backgroundColor: colors.card, borderColor: colors.border },
-                    ]}
-                >
-                    <Stat label="Cursos" value="12" color={colors.primary} />
-                    <Divider color={colors.border} />
-                    <Stat label="Promedio" value="85%" color="#F59E0B" />
-                    <Divider color={colors.border} />
-                    <Stat label="Tareas" value="24" color="#10B981" />
-                </View> */}
 
                 {/* CONFIGURACIÓN */}
                 <View style={styles.settingsSection}>
@@ -119,11 +123,11 @@ export default function ConfiguracionScreen() {
                                 pathname: "/(tabs)/editar-perfil",
                                 params: {
                                     userData: JSON.stringify({
-                                        nombreCompleto: usuario?.displayName || (usuario as any)?.nombreCompleto || "",
-                                        email: usuario?.email || "",
-                                        telefono: (usuario as any)?.telefono || "",
-                                        username: (usuario as any)?.username || "",
-                                        fechaNacimiento: (usuario as any)?.fechaNacimiento || "",
+                                        nombreCompleto: perfil?.nombreCompleto || usuario?.displayName || "",
+                                        email: perfil?.email || usuario?.email || "",
+                                        telefono: perfil?.telefono || "",
+                                        username: perfil?.username || "",
+                                        fechaNacimiento: perfil?.fechaNacimiento || "",
                                     }),
                                 },
                             })

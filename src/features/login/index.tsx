@@ -5,7 +5,6 @@ import { ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { LoginLogic } from "./login.hook";
 import { styles } from "./login.styles";
-
 import BotonCustom from "../../../components/ui/BotonCustom";
 import BotonGradiente from "../../../components/ui/BotonGradiente";
 import ContraseñaButton from "../../../components/ui/ContraseñaButton";
@@ -87,6 +86,13 @@ export default function LoginScreen() {
                                 <Text style={styles.footerLink}>Regístrate aquí</Text>
                             </TouchableOpacity>
                         </View>
+
+                        <TouchableOpacity onPress={() => router.push("/resetear-password")}>
+                            <Text className="text-primary mt-3 text-center">
+                                ¿Olvidaste tu contraseña?
+                            </Text>
+                        </TouchableOpacity>
+
 
                         {loading && (
                             <View style={{ alignItems: "center", marginTop: 10 }}>

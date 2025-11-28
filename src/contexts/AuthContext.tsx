@@ -3,6 +3,7 @@ import React, { createContext, useContext, useEffect, useState } from "react";
 import { onAuthStateChanged, User, signOut } from "firebase/auth";
 import { FIREBASE_AUTH } from "../services/FirebaseConfig";
 import * as SecureStore from "expo-secure-store";
+import { useRouter } from "expo-router";
 
 type AuthContextType = {
     usuario: User | null;
@@ -21,13 +22,24 @@ export const useAuth = () => {
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const [usuario, setUsuario] = useState<User | null>(null);
     const [loading, setLoading] = useState(true);
+    const router = useRouter();
 
-    
     useEffect(() => {
-        const unsubscribe = onAuthStateChanged(FIREBASE_AUTH, (user) => {
-            setUsuario(user ?? null);
+        const unsubscribe = onAuthStateChanged(FIREBASE_AUTH, async (user) => {
             setLoading(false);
+
+            // Usuario NO verificado → redirigir
+            if (user && !user.emailVerified) {
+                setUsuario(null); // Bloquea acceso a la app
+                await SecureStore.setItemAsync("uid", user.uid);
+                router.replace("/(auth)/verificar-correo/verificarCorreo");
+                return;
+            }
+
+            //  Usuario verificado o no logueado
+            setUsuario(user ?? null);
         });
+
         return unsubscribe;
     }, []);
 
@@ -36,6 +48,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             await signOut(FIREBASE_AUTH);
             await SecureStore.deleteItemAsync("uid");
             setUsuario(null);
+            router.replace("/(auth)/login");
         } catch (error) {
             console.log("Error en logout:", error);
         }
