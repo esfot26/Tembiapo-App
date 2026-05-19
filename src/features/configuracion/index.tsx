@@ -146,7 +146,7 @@ export default function ConfiguracionScreen() {
                         title="Ayuda y Soporte"
                         icon={HelpCircle}
                         color="#10B981"
-                        onPress={() => Toast.show({ type: "info", text1: "Próximamente" })}
+                        onPress={() => Toast.show({ type: "info", text1: "🔜 Próximamente 🔜" })}
                     />
 
                     <SettingItem
@@ -176,7 +176,7 @@ function SettingItem({ title, icon: Icon, color, onPress, showChevron = true }: 
     showChevron?: boolean;
 }) {
     const scale = React.useRef(new Animated.Value(1)).current;
-    const { colors, theme } = useTheme(); // ✅ usar el tema aquí
+    const { colors, theme } = useTheme(); 
     const isDark = theme === "dark";
     return (
         <TouchableOpacity

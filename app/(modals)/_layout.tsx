@@ -20,7 +20,7 @@ export default function ModalLayout() {
         options={{
           headerTitle: "Nota",
           headerTitleStyle: {
-            color: colors.foreground,
+            color: colors.primaryForeground,
           },
         }}
       />
@@ -29,7 +29,7 @@ export default function ModalLayout() {
         options={{
           headerTitle: "Editar Perfil",
           headerTitleStyle: {
-            color: colors.foreground,
+            color: colors.primaryForeground,
           },
         }}
       />

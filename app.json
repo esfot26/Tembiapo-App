@@ -25,7 +25,11 @@
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.esfot.TembiapoApp"
+      "package": "com.esfot.TembiapoApp",
+      "permissions": [
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE"
+      ]
     },
     "web": {
       "bundler": "metro",
@@ -37,7 +41,16 @@
       "expo-web-browser",
       "expo-font",
       "expo-notifications",
-      "expo-secure-store"
+      "expo-secure-store",
+      [
+        "expo-media-library",
+        {
+          "photosPermission": "Permitir acceso a fotos.",
+          "savePhotosPermission": "Permitir guardar archivos.",
+          "isAccessMediaLocationEnabled": true,
+          "audioPermission": false 
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true

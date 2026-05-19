@@ -4,6 +4,7 @@ import { Nota, NotasService, NotaData } from "../services/NotasServices";
 
 type NotasContextType = {
     notas: Nota[];
+    setNotas: React.Dispatch<React.SetStateAction<Nota[]>>;
     loading: boolean;
     cargarNotas: () => Promise<void>;
     crearNota: (notaData: NotaData) => Promise<void>;
@@ -27,7 +28,7 @@ export const NotasProvider = ({ children }: { children: ReactNode }) => {
             Toast.show({
                 type: "error",
                 text1: "Error",
-                text2: "No se pudieron cargar las notas.",
+                text2: " ❌ No se pudieron cargar las notas.",
             });
         } finally {
             setLoading(false);
@@ -60,7 +61,7 @@ export const NotasProvider = ({ children }: { children: ReactNode }) => {
             Toast.show({
                 type: "success",
                 text1: "¡Nota creada!",
-                text2: "Tu nueva nota ya está disponible.",
+                text2: "✅​ Tu nueva nota ya está disponible.",
                 visibilityTime: 2500,
                 autoHide: true,
                 topOffset: 60,
@@ -74,7 +75,7 @@ export const NotasProvider = ({ children }: { children: ReactNode }) => {
             Toast.show({
                 type: "error",
                 text1: "Error",
-                text2: "No se pudo crear la nota.",
+                text2: " ❌ No se pudo crear la nota.",
             });
         }
     };
@@ -87,7 +88,7 @@ export const NotasProvider = ({ children }: { children: ReactNode }) => {
         const notaOriginal = notas.find((n) => n.id === notaId);
         if (!notaOriginal) return;
 
-        // ✅ Actualizar inmediatamente en la UI
+        // ✅ Renderizado optimista en la UI
         setNotas((prev) =>
             prev.map((n) => (n.id === notaId ? { ...n, ...updates } : n))
         );
@@ -96,15 +97,29 @@ export const NotasProvider = ({ children }: { children: ReactNode }) => {
             // 📡 Actualizar en Firebase en segundo plano
             await NotasService.actualizarNota(notaId, updates);
 
+            // 🔄 SOLUCIÓN: Definimos textos dinámicos según el tipo de actualización
+            let tituloToast = "Nota Actualizada";
+            let mensajeToast = "✅ La nota ha sido actualizada exitosamente.";
+
+            if (updates.completado !== undefined) {
+                tituloToast = updates.completado ? "¡Nota Completada! 🎉" : "Nota Pendiente 📋";
+                mensajeToast = updates.completado
+                    ? "La nota se marcó como completada."
+                    : "La nota se marcó como pendiente.";
+            }
+
             Toast.show({
                 type: "success",
-                text1: "Nota Actualizada",
-                text2: "La nota ha sido actualizada exitosamente.",
+                text1: tituloToast,
+                text2: mensajeToast,
+                visibilityTime: 2000, // Un tiempo sutil para toasts rápidos
+                autoHide: true,
+                topOffset: 60,
             });
         } catch (error) {
             console.error("Error al actualizar la nota:", error);
 
-            // ❌ Rollback: Restaurar nota original
+            // ❌ Rollback si Firebase falla
             setNotas((prev) =>
                 prev.map((n) => (n.id === notaId ? notaOriginal : n))
             );
@@ -112,7 +127,7 @@ export const NotasProvider = ({ children }: { children: ReactNode }) => {
             Toast.show({
                 type: "error",
                 text1: "Error",
-                text2: "No se pudo actualizar la nota.",
+                text2: " ❌ No se pudo actualizar la nota.",
             });
         }
     };
@@ -131,8 +146,8 @@ export const NotasProvider = ({ children }: { children: ReactNode }) => {
 
             Toast.show({
                 type: "success",
-                text1: "Nota eliminada",
-                text2: "La nota fue eliminada correctamente.",
+                text1: "🗑️ Nota eliminada",
+                text2: "✅​ La nota fue eliminada correctamente .",
                 autoHide: true,
                 topOffset: 50,
                 position: "top",
@@ -146,7 +161,7 @@ export const NotasProvider = ({ children }: { children: ReactNode }) => {
             Toast.show({
                 type: "error",
                 text1: "Error",
-                text2: "No se pudo eliminar la nota.",
+                text2: " ❌ No se pudo eliminar la nota.",
                 autoHide: true,
                 topOffset: 60,
             });
@@ -157,6 +172,7 @@ export const NotasProvider = ({ children }: { children: ReactNode }) => {
         <NotasContext.Provider
             value={{
                 notas,
+                setNotas,
                 loading,
                 cargarNotas,
                 crearNota,

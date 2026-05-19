@@ -16,47 +16,53 @@ export default function ResetPasswordScreen() {
     const [loading, setLoading] = useState(false);
 
     const handleReset = async () => {
+        // Validación campo vacío
         if (!email.trim()) {
             Toast.show({
                 type: "error",
                 text1: "Campo vacío",
-                text2: "Ingresa tu correo electrónico."
+                text2: "Ingresa tu correo electrónico.",
             });
             return;
         }
+
+        // Validación formato
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email.trim())) {
+            Toast.show({
+                type: "error",
+                text1: "Correo inválido",
+                text2: "Ingresa un correo con formato válido (ej: usuario@correo.com).",
+            });
+            return;
+        }
+
         try {
             setLoading(true);
             await sendPasswordResetEmail(FIREBASE_AUTH, email.trim());
 
             Toast.show({
                 type: "success",
-                text1: "Correo enviado",
-                text2: "Revisa tu bandeja de SPAM de tu correo para restablecer tu contraseña."
+                text1: "Correo enviado ✉️",
+                text2: "Revisa tu bandeja de entrada y spam.",
             });
 
-            setTimeout(() => {
-                router.back();
-            }, 1500);
+            setTimeout(() => router.back(), 2000);
 
         } catch (error: any) {
-            let message = "Ocurrió un error";
+            console.log("Error reset password:", error.code);
 
-            switch (error.code) {
-                case "auth/invalid-email":
-                    message = "El formato del correo no es válido.";
-                    break;
-                case "auth/user-not-found":
-                    message = "No existe una cuenta con este correo.";
-                    break;
-                case "auth/missing-email":
-                    message = "Ingresa un correo válido.";
-                    break;
-            }
+            const firebaseErrors: Record<string, string> = {
+                "auth/invalid-email": "El formato del correo no es válido.",
+                "auth/missing-email": "Ingresa un correo válido.",
+                "auth/too-many-requests": "Demasiados intentos. Espera unos minutos.",
+                "auth/network-request-failed": "Sin conexión. Verifica tu internet.",
+            };
 
             Toast.show({
                 type: "error",
-                text1: "Error",
-                text2: message
+                text1: "Error al enviar",
+                text2: firebaseErrors[error.code] ?? "Ocurrió un error inesperado.",
             });
         } finally {
             setLoading(false);
@@ -117,7 +123,6 @@ export default function ResetPasswordScreen() {
                         <BotonGradiente
                             text={loading ? "Enviando..." : "Enviar correo"}
                             onPress={handleReset}
-                            
                             colors={["#2563EB", "#1E3A8A"]}
                         />
 

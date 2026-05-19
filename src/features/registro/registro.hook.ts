@@ -1,5 +1,3 @@
-// src/hooks/RegistroLogic.ts
-
 import React, { useState } from "react";
 import {
     validarCamposObligatorios,
@@ -10,7 +8,7 @@ import {
     validarFecha,
 } from "@/src/utils/validacion";
 
-import { doc, setDoc } from "firebase/firestore";
+import { doc, serverTimestamp, setDoc } from "firebase/firestore";
 import { FIREBASE_DB, FIREBASE_AUTH } from "@/src/services/FirebaseConfig";
 
 import {
@@ -108,7 +106,7 @@ export const RegistroLogic = () => {
                 fechaNacimiento,
                 rol,
                 estado,
-                creado: new Date().toISOString(),
+                creadoEn: serverTimestamp(),
             });
 
             // 🔥 ENVIAR VERIFICACIÓN DE CORREO
@@ -124,14 +122,22 @@ export const RegistroLogic = () => {
             router.replace("/(auth)/verificar-correo/verificarCorreo");
 
         } catch (error: any) {
-            const errorMessage = error.code
-                ? error.code.replace("auth/", "").split("-").join(" ")
-                : error.message;
+            console.log("Error registro:", error.code);
+            console.log("Código:", error.code);
+            console.log("Mensaje:", error.message);
+            const firebaseErrors: Record<string, string> = {
+                "auth/email-already-in-use": "Este correo ya está registrado.",
+                "auth/invalid-email": "El formato del correo no es válido.",
+                "auth/weak-password": "La contraseña debe tener al menos 6 caracteres.",
+                "auth/network-request-failed": "Sin conexión. Verifica tu internet.",
+                "auth/too-many-requests": "Demasiados intentos. Espera unos minutos.",
+                "auth/operation-not-allowed": "Registro deshabilitado. Contacta soporte.",
+            };
 
             Toast.show({
                 type: "error",
                 text1: "Error al registrar",
-                text2: errorMessage,
+                text2: firebaseErrors[error.code] ?? "Ocurrió un error inesperado.",
             });
         } finally {
             setIsLoading(false);

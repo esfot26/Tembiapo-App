@@ -3,6 +3,7 @@ import CustomTabBar from "@/components/layout/CustomTabBar";
 import { useTheme } from "@/src/contexts/TemaContext";
 import { Ionicons } from "@expo/vector-icons";
 
+
 export default function TabsLayout() {
     const { colors } = useTheme();
 
@@ -58,7 +59,7 @@ export default function TabsLayout() {
             <Tabs.Screen
                 name="configuracion/index"
                 options={{
-                    title: "Config",
+                    title: "Configuración",
                     tabBarIcon: ({ color, size }) => (
                         <Ionicons name="settings-outline" size={size} color={color} />
                     ),

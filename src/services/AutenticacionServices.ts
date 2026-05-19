@@ -4,10 +4,12 @@ import {
     signInWithEmailAndPassword,
     updatePassword,
     sendPasswordResetEmail,
-    signOut
+    signOut,
+    reauthenticateWithCredential,
+    EmailAuthProvider
 } from "firebase/auth";
 
-import { doc, setDoc, getDoc } from "firebase/firestore";
+import { doc, setDoc, getDoc, serverTimestamp } from "firebase/firestore";
 import { FIREBASE_AUTH, FIREBASE_DB } from "./FirebaseConfig";
 
 export const AuthService = {
@@ -17,20 +19,16 @@ export const AuthService = {
             email,
             password
         );
-
         const user = userCredential.user;
 
-        // Guardar datos del usuario en Firestore
         await setDoc(doc(FIREBASE_DB, "usuarios", user.uid), {
             nombre: name,
             email,
-            foto: null,
-            creadoEn: new Date()
+            photoURL: null,
+            creadoEn: serverTimestamp(), 
         });
 
-        // Enviar verificación
         await sendEmailVerification(user);
-
         return user;
     },
 
@@ -42,9 +40,14 @@ export const AuthService = {
         return sendPasswordResetEmail(FIREBASE_AUTH, email);
     },
 
-    async changePassword(newPassword: string) {
+    // ✅ Reautentica antes de cambiar contraseña
+    async changePassword(currentPassword: string, newPassword: string) {
         const user = FIREBASE_AUTH.currentUser;
-        if (!user) throw new Error("Usuario no autenticado");
+        if (!user || !user.email) throw new Error("Usuario no autenticado");
+
+        // Reautenticar primero
+        const credential = EmailAuthProvider.credential(user.email, currentPassword);
+        await reauthenticateWithCredential(user, credential);
 
         return updatePassword(user, newPassword);
     },
@@ -55,5 +58,5 @@ export const AuthService = {
 
     async getUserProfile(uid: string) {
         return getDoc(doc(FIREBASE_DB, "usuarios", uid));
-    }
+    },
 };

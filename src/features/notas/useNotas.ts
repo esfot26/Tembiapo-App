@@ -52,7 +52,7 @@ export const useNotas = () => {
         type: "success",
         text1: "¡Nota creada!",
         text2: "Tu nueva nota ya está disponible.",
-        visibilityTime: 2500,
+        visibilityTime: 2000,
         autoHide: true,
         topOffset: 60,
       });
@@ -126,7 +126,7 @@ export const useNotas = () => {
       Toast.show({
         type: "success",
         text1: "Nota eliminada",
-        text2: "La nota fue eliminada correctamente.",
+        text2: "✅​ La nota fue eliminada correctamente .",
         //visibilityTime: 3000,
         autoHide: true,
         topOffset: 50,
@@ -142,7 +142,7 @@ export const useNotas = () => {
         type: "error",
         text1: "Error",
         text2: "No se pudo eliminar la nota.",
-        //visibilityTime: 2500,
+        visibilityTime: 1500,
         autoHide: true,
         topOffset: 60,
       });
@@ -151,6 +151,7 @@ export const useNotas = () => {
 
   return {
     notas,
+    setNotas,
     loading,
     cargarNotas,
     crearNota,

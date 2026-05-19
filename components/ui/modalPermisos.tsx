@@ -11,7 +11,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "@/src/contexts/TemaContext";
 
 export function ModalPermisos({
-    visible,
+    visible , 
     onClose,
     onConceder,
     tipo = "almacenamiento",

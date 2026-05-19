@@ -191,11 +191,11 @@ export default function EditarPerfil() {
         displayName: `${formData.nombre} ${formData.apellido}`.trim(),
       });
 
-      Toast.show({ type: "success", text1: "Perfil actualizado" });
+      Toast.show({ type: "success", text1: "✅​ Perfil actualizado" });
       router.back();
     } catch (e) {
       console.error("Error al actualizar perfil:", e);
-      Toast.show({ type: "error", text1: "No se pudo actualizar el perfil" });
+      Toast.show({ type: "error", text1: " ❌ No se pudo actualizar el perfil" });
     } finally {
       setSaving(false);
     }
@@ -282,21 +282,33 @@ export default function EditarPerfil() {
             elevation: 2,
           }}
         >
+          {/* Nota: Asegurate de que la variable 'width' esté definida arriba, si no usá un número fijo como 20 o 24 */}
           <Ionicons name="arrow-back" size={width * 0.08} color={colors.foreground} />
         </TouchableOpacity>
-        <View style={{ flex: 1, alignItems: "center", padding: 12 }}>
-          <Text numberOfLines={1} ellipsizeMode="tail" style={{ color: colors.foreground, fontSize: 18, fontWeight: "700", marginLeft: 12 }}>
+
+        <View style={{ flex: 1, alignItems: "center", paddingVertical: 12 }}>
+          <Text
+            numberOfLines={1}
+            ellipsizeMode="tail"
+            style={{
+              color: colors.foreground,
+              fontSize: 18, // ¡CORREGIDO AQUÍ! De 180 a 18
+              fontWeight: "700"
+            }}
+          >
             Editar Perfil
           </Text>
         </View>
-        <View style={{ width: 80 }} />
+
+        {/* Ajusté el ancho a 36 para que haga simetría perfecta con el botón de atrás y el texto quede centrado de verdad */}
+        <View style={{ width: 36 }} />
       </View>
       <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={styles.keyboardView}>
         <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
 
           {/* Formulario */}
           <View style={[styles.formContainer, { backgroundColor: colors.card, shadowColor: colors.border }]}>
-            <Text style={[styles.sectionTitle, { color: colors.foreground }]}>Información Personal</Text>
+            <Text style={[styles.sectionTitle, { color: colors.foreground, alignItems: "center", textAlign: "center" }]}>Información Personal</Text>
             {renderInput("nombre", "Nombre", "person-outline", "default", true)}
             {renderInput("apellido", "Apellido", "person-outline", "default", true)}
             {renderInput("username", "Nombre de usuario", "at-outline", "default", true)}
@@ -351,6 +363,11 @@ export default function EditarPerfil() {
                 mode="date"
                 display="default"
                 onChange={(event, date) => {
+                  // SOLUCIÓN: En Android ocultamos el picker inmediatamente al tocar cualquier botón
+                  if (Platform.OS === "android") {
+                    setShowFechaPicker(false);
+                  }
+
                   if (date) {
                     const dd = ("0" + date.getDate()).slice(-2);
                     const mm = ("0" + (date.getMonth() + 1)).slice(-2);
@@ -359,7 +376,12 @@ export default function EditarPerfil() {
                     setFormData((prev) => ({ ...prev, fechaNacimiento: display }));
                     validateField("fechaNacimiento", display);
                   }
-                  setShowFechaPicker(Platform.OS === "ios");
+
+                  // En iOS se suele mantener abierto según el tipo de display, pero si usas "default" 
+                  // y querés que se cierre al cambiar, podés alternarlo aquí también.
+                  if (Platform.OS === "ios") {
+                    setShowFechaPicker(false); // O remover esta línea si usás display="spinner" continuo
+                  }
                 }}
               />
             )}
@@ -415,37 +437,108 @@ export default function EditarPerfil() {
   );
 }
 
-const styles = StyleSheet.create({
-  safeArea: { flex: 1 },
-  keyboardView: { flex: 1 },
-  scrollView: { flex: 1},
-  scrollContent: { paddingHorizontal: width * 0.05, paddingBottom: height * 0.05 },
-  avatarContainer: { alignItems: "center", marginVertical: height * 0.03 },
+
+export const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1
+  },
+  keyboardView: {
+    flex: 1
+  },
+  scrollView: {
+    flex: 1
+  },
+  scrollContent: {
+    paddingHorizontal: width * 0.05,
+    paddingBottom: height * 0.05
+  },
+  avatarContainer: {
+    alignItems: "center",
+    marginVertical: height * 0.03
+  },
   avatar: {
-    width: width * 0.25, height: width * 0.25, borderRadius: width * 0.125,
-    borderWidth: 1, justifyContent: "center", alignItems: "center", marginBottom: height * 0.015,
+    width: width * 0.25,
+    height: width * 0.25,
+    borderRadius: (width * 0.25) / 2, // Garantiza un círculo perfecto
+    borderWidth: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: height * 0.015,
   },
-  changePhotoText: { fontSize: width * 0.035, fontWeight: "600" },
+  changePhotoText: {
+    fontSize: width * 0.035,
+    fontWeight: "600"
+  },
   formContainer: {
-    borderRadius: width * 0.04, padding: width * 0.05, marginBottom: height * 0.03,
-    shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 3.84, elevation: 5,
+    borderRadius: width * 0.04,
+    padding: width * 0.05,
+    marginBottom: height * 0.03,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3.84,
+    elevation: 3, // Bajado un toque para que no sea tan tosco en modo claro
   },
-  sectionTitle: { fontSize: width * 0.045, fontWeight: "600", marginBottom: height * 0.02, marginTop: height * 0.01 },
-  inputContainer: { marginBottom: height * 0.02 },
+  sectionTitle: {
+    fontSize: width * 0.042,
+    fontWeight: "700",
+    marginBottom: height * 0.015,
+    marginTop: height * 0.02,
+    // Eliminados estilos conflictivos; el alineado se maneja mejor desde el contenedor
+  },
+  inputContainer: {
+    marginBottom: height * 0.018
+  },
   inputWrapper: {
-    flexDirection: "row", alignItems: "center", borderRadius: width * 0.03,
-    borderWidth: 1, paddingHorizontal: width * 0.04, minHeight: height * 0.06,
+    flexDirection: "row",
+    alignItems: "center",
+    borderRadius: width * 0.03,
+    borderWidth: 1,
+    paddingHorizontal: width * 0.04,
+    minHeight: height * 0.06,
   },
-  inputError: { borderColor: "#ef4444", backgroundColor: "#fef2f2" },
-  inputIcon: { marginRight: width * 0.03 },
-  input: { flex: 1, fontSize: width * 0.04, paddingVertical: height * 0.015 },
-  requiredMark: { color: "#ef4444", fontSize: width * 0.045, fontWeight: "bold", marginLeft: width * 0.02 },
-  errorText: { fontSize: width * 0.032, marginTop: height * 0.005 },
+  inputError: {
+    borderColor: "#ef4444",
+    backgroundColor: "#fef2f2"
+  },
+  inputIcon: {
+    marginRight: width * 0.025
+  },
+  input: {
+    flex: 1,
+    fontSize: width * 0.038,
+    paddingVertical: height * 0.012
+  },
+  requiredMark: {
+    color: "#ef4444",
+    fontSize: width * 0.04,
+    fontWeight: "bold",
+    marginLeft: width * 0.01
+  },
+  errorText: {
+    fontSize: width * 0.032,
+    marginTop: height * 0.006,
+    fontWeight: "500",
+    paddingLeft: width * 0.01 // Alinea sutilmente el error con el inicio del input
+  },
   saveButton: {
-    flexDirection: "row", alignItems: "center", justifyContent: "center",
-    paddingVertical: height * 0.02, borderRadius: width * 0.03, marginTop: height * 0.02,
-    shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 4.65, elevation: 8,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: height * 0.018,
+    borderRadius: width * 0.03,
+    marginTop: height * 0.02,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.2,
+    shadowRadius: 3.84,
+    elevation: 4,
   },
-  saveButtonDisabled: { opacity: 0.6 },
-  saveButtonText: { color: "white", fontSize: width * 0.042, fontWeight: "600", marginLeft: width * 0.02 },
+  saveButtonDisabled: {
+    opacity: 0.5
+  },
+  saveButtonText: {
+    color: "white",
+    fontSize: width * 0.04,
+    fontWeight: "600",
+    marginLeft: width * 0.02
+  },
 });

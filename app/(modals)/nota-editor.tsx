@@ -4,160 +4,124 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  ScrollView,
-  StyleSheet,
+  ScrollView
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { Link, router, useLocalSearchParams } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTheme } from "@/src/contexts/TemaContext";
 import { Nota, Prioridad } from "@/src/services/NotasServices";
 import { useNotas } from "@/src/contexts/NotasContext";
-
-
-export default function NotaEditorModal() {
+import { renderCategoriaSelector } from "@/src/features/notas/components/renderCategoria";
+import { renderPrioridadSelector } from "@/src/features/notas/components/renderPrioridad";
+import { styles } from "@/src/features/notas/styles/nota.editor.styles";
+export default function ModalScreen() {
   const { colors } = useTheme();
   const { crearNota, actualizarNota } = useNotas();
   const params = useLocalSearchParams();
   const insets = useSafeAreaInsets();
-  const [nota, setNota] = useState<Partial<Nota> | null>(null);
 
+  // Estados de los campos
+  const [notaId, setNotaId] = useState<string | null>(null);
   const [titulo, setTitulo] = useState("");
   const [descripcion, setDescripcion] = useState("");
-  const [categoria, setCategoria] = useState("");
+  // Corrección 1: Inicializamos con una categoría por defecto válida
+  const [categoria, setCategoria] = useState("Estudio");
   const [prioridad, setPrioridad] = useState<Prioridad>("baja");
-  const isEdit = (() => {
-    try {
-      const n = params.nota ? (JSON.parse(params.nota as string) as Partial<Nota>) : null;
-      return !!(n && n.id);
-    } catch {
-      return false;
-    }
-  })();
 
+  // Estado para validación visual
+  const [errorTitulo, setErrorTitulo] = useState<string | null>(null);
+  const [errorDescripcion, setErrorDescripcion] = useState<string | null>(null);
+  // Determinamos si es edición basándonos puramente en la existencia del id capturado
+  const isEdit = !!notaId;
+
+  // Corrección 2: Un solo punto de entrada seguro para parsear el parámetro
   useEffect(() => {
     if (params.nota) {
-      const notaParseada = JSON.parse(params.nota as string) as Nota;
-      setNota(notaParseada);
-      setTitulo(notaParseada.titulo);
-      setDescripcion(notaParseada.descripcion);
-      setCategoria(notaParseada.categoria);
-      setPrioridad(notaParseada.prioridad);
+      try {
+        const notaParseada = JSON.parse(params.nota as string) as Nota;
+        if (notaParseada && notaParseada.id) {
+          setNotaId(notaParseada.id);
+          setTitulo(notaParseada.titulo || "");
+          setDescripcion(notaParseada.descripcion || "");
+          setCategoria(notaParseada.categoria || "Estudio");
+          setPrioridad(notaParseada.prioridad || "baja");
+        }
+      } catch (error) {
+        console.error("Error parseando la nota en el editor:", error);
+      }
+    } else {
+      setNotaId(null);
+      setTitulo("");
+      setDescripcion("");
+      setCategoria("Estudio");
+      setPrioridad("baja");
+      setErrorTitulo(null);
+      setErrorDescripcion(null);
     }
   }, [params.nota]);
 
+  // Corrección 3: Control de validaciones antes del envío a Firebase
   const handleSave = async () => {
-    const notaData = { titulo, descripcion, categoria, prioridad };
-    if (nota && nota.id) {
-      await actualizarNota(nota.id, notaData);
-    } else {
-      await crearNota(notaData);
+    if (!titulo.trim()) {
+      setErrorTitulo("El título es obligatorio para guardar la nota.");
+      return;
     }
-    router.replace("/(tabs)/notas");
 
+    if (!descripcion.trim()) {
+      setErrorDescripcion("La descripción es obligatoria para guardar la nota.");
+      return;
+    }
+
+    const notaData = {
+      titulo: titulo.trim(),
+      descripcion: descripcion.trim(),
+      categoria,
+      prioridad
+    };
+
+    try {
+      if (isEdit && notaId) {
+        await actualizarNota(notaId, notaData);
+      } else {
+        await crearNota(notaData);
+      }
+      router.replace("/(tabs)/notas");
+    } catch (error) {
+      console.error("Error al procesar la nota:", error);
+    }
   };
 
-  const categorias: { key: string; icon: keyof typeof Ionicons.glyphMap }[] = [
-    { key: "Trabajo", icon: "briefcase-outline" },
-    { key: "Personal", icon: "person-outline" },
-    { key: "Estudio", icon: "book-outline" },
-    { key: "Salud", icon: "heart-outline" },
-  ];
-
-  const renderCategoriaSelector = () => {
-    return (
-      <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
-        {categorias.map((c) => {
-          const active = categoria === c.key;
-          return (
-            <TouchableOpacity
-              key={c.key}
-              onPress={() => setCategoria(c.key)}
-              style={[
-                styles.selectorItem,
-                {
-                  backgroundColor: active ? colors.primary : colors.card,
-                  borderColor: active ? colors.foreground : colors.foreground,
-                },
-              ]}
-            >
-              <Ionicons
-                name={c.icon}
-                size={20}
-                color={active ? "white" : colors.foreground}
-              />
-              <Text
-                style={{
-                  marginTop: 6,
-                  color: active ? "white" : colors.foreground,
-                  fontWeight: active ? "700" : "500",
-                }}
-              >
-                {c.key}
-              </Text>
-            </TouchableOpacity>
-          );
-        })}
-      </View>
-    );
-  };
-
-  const renderPrioridadSelector = () => {
-    const prioridades: { key: Prioridad; icon: keyof typeof Ionicons.glyphMap; label: string }[] = [
-      { key: "baja", icon: "chevron-down-outline", label: "Baja" },
-      { key: "media", icon: "remove-outline", label: "Media" },
-      { key: "alta", icon: "chevron-up-outline", label: "Alta" },
-    ];
-    return (
-      <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
-        {prioridades.map((p) => {
-          const active = prioridad === p.key;
-          return (
-            <TouchableOpacity
-              key={p.key}
-              onPress={() => setPrioridad(p.key)}
-              style={[
-                styles.selectorItem,
-                {
-                  backgroundColor: active ? colors.foreground : colors.card,
-                  borderColor: active ? colors.foreground : colors.foreground,
-                },
-              ]}
-            >
-              <Ionicons
-                name={p.icon}
-                size={20}
-                color={active ? "white" : colors.foreground}
-              />
-              <Text
-                style={{
-                  marginTop: 6,
-                  color: active ? "white" : colors.foreground,
-                  fontWeight: active ? "700" : "500",
-                }}
-              >
-                {p.label}
-              </Text>
-            </TouchableOpacity>
-          );
-        })}
-      </View>
-    );
-  };
 
   const handleBack = () => {
-    router.replace("/(tabs)/notas");
-  }
 
+    setNotaId(null);
+    setTitulo("");
+    setDescripcion("");
+    setCategoria("Estudio");
+    setPrioridad("baja");
+    setErrorTitulo(null);
+    setErrorDescripcion(null);
+
+
+    router.replace("/(tabs)/notas");
+  };
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
+      {/* HEADER */}
       <View
-        className="flex-row items-center justify-between px-4 py-3 border-b shadow-sm"
         style={{
+          flexDirection: "row",
+          alignItems: "center",
+          justifyContent: "space-between",
+          paddingHorizontal: 16,
           backgroundColor: colors.card,
+          borderBottomWidth: 1,
           borderColor: colors.border,
           paddingTop: insets.top + 4,
+          paddingBottom: 12,
+
         }}
       >
         <TouchableOpacity
@@ -172,20 +136,17 @@ export default function NotaEditorModal() {
             backgroundColor: colors.background,
             borderWidth: 1,
             borderColor: colors.border,
-            shadowOpacity: 0.12,
-            shadowRadius: 4,
-            shadowOffset: { width: 0, height: 2 },
-            elevation: 2,
           }}
         >
           <Ionicons name="arrow-back" size={20} color={colors.foreground} />
         </TouchableOpacity>
-        <View style={{ flex: 1, alignItems: "center", padding: 12 }}>
-          <Text numberOfLines={1} ellipsizeMode="tail" style={{ color: colors.foreground, fontSize: 18, fontWeight: "700", marginLeft: 12 }}>
-            {isEdit ? "Editar Nota" : "Agregar nueva nota"}
+
+        <View style={{ flex: 1, alignItems: "center" }}>
+          <Text numberOfLines={1} ellipsizeMode="tail" style={{ color: colors.foreground, fontSize: 18, fontWeight: "700" }}>
+            {isEdit ? "Editar Nota" : "Crear Nota"}
           </Text>
         </View>
-        <View style={{ width: 80 }} />
+        <View style={{ width: 36 }} />
       </View>
 
       <ScrollView
@@ -194,68 +155,74 @@ export default function NotaEditorModal() {
         showsVerticalScrollIndicator={false}
       >
         {/* --- TITULO --- */}
-        <Text style={[styles.label, { color: colors.foreground }]}>Título</Text>
+        <Text style={[styles.label, { color: colors.foreground }]}>Título *</Text>
         <TextInput
           value={titulo}
-          onChangeText={setTitulo}
+          onChangeText={(text) => {
+            setTitulo(text);
+            if (errorTitulo) setErrorTitulo(null); // Limpieza reactiva del error
+          }}
           style={[
             styles.input,
             {
               backgroundColor: colors.card,
               color: colors.foreground,
-              borderColor: colors.border,
+              // El borde cambia dinámicamente si hay error
+              borderColor: errorTitulo ? colors.destructive : colors.border,
             },
           ]}
           placeholder="Título de la nota"
           placeholderTextColor={colors.mutedForeground}
         />
+        {/* Texto del error sutil abajo del input */}
+        {errorTitulo && (
+          <Text style={[styles.errorTexto, { color: colors.destructive }]}>
+            {errorTitulo}
+          </Text>
+        )}
 
         {/* --- DESCRIPCION --- */}
-        <Text style={[styles.label, { color: colors.foreground }]}>Descripción</Text>
+        <Text style={[styles.label, { color: colors.foreground }]}>Descripción *</Text>
         <TextInput
           value={descripcion}
-          onChangeText={setDescripcion}
+          onChangeText={(text) => {
+            setDescripcion(text);
+            if (errorDescripcion) setErrorDescripcion(null); // Limpieza reactiva al escribir
+          }}
           style={[
             styles.input,
             styles.multilineInput,
             {
               backgroundColor: colors.card,
               color: colors.foreground,
-              borderColor: colors.border,
+              borderColor: errorDescripcion ? colors.destructive : colors.border,
             },
           ]}
           placeholder="Descripción..."
           placeholderTextColor={colors.mutedForeground}
           multiline
         />
+        {errorDescripcion && (
+          <Text style={[styles.errorTexto, { color: colors.destructive, marginBottom: 8 }]}>
+            {errorDescripcion}
+          </Text>
+        )}
 
         {/* --- CATEGORIA --- */}
         <Text style={[styles.label, { color: colors.foreground }]}>Categoría</Text>
-        {renderCategoriaSelector()}
+        {renderCategoriaSelector({ categoria, setCategoria })}
 
         {/* --- PRIORIDAD --- */}
         <Text style={[styles.label, { color: colors.foreground }]}>Prioridad</Text>
-        {renderPrioridadSelector()}
+        {renderPrioridadSelector({ prioridad, setPrioridad })}
 
         {/* --- BOTONES --- */}
-        <View
-          style={{
-            marginTop: 28,
-            flexDirection: "row",
-            gap: 12,
-          }}
-        >
+        <View style={{ marginTop: 28, flexDirection: "row", gap: 12 }}>
           {/* GUARDAR */}
           <TouchableOpacity
             onPress={handleSave}
             activeOpacity={0.9}
-            style={[
-              styles.actionButton,
-              {
-                backgroundColor: colors.primary,
-                shadowColor: colors.primary,
-              },
-            ]}
+            style={[styles.actionButton, { backgroundColor: colors.primary }]}
           >
             <Ionicons name="save-outline" size={22} color="white" />
             <Text style={styles.actionText}>Guardar</Text>
@@ -264,19 +231,11 @@ export default function NotaEditorModal() {
           {/* CANCELAR */}
           <TouchableOpacity
             onPress={handleBack}
-            //activeOpacity={0.9}
-            style={[
-              styles.actionButton,
-              {
-                backgroundColor: colors.destructive,
-                shadowColor: colors.destructive,
-              },
-            ]}
+            activeOpacity={0.8}
+            style={[styles.actionButton, { backgroundColor: colors.destructive }]}
           >
             <Ionicons name="close-circle-outline" size={22} color="white" />
-            <Text style={styles.actionText}
-
-            >Cancelar</Text>
+            <Text style={styles.actionText}>Cancelar</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
@@ -284,55 +243,3 @@ export default function NotaEditorModal() {
   );
 }
 
-const styles = StyleSheet.create({
-  selectorItem: {
-    flex: 1,
-    paddingVertical: 8,
-    borderRadius: 10,
-    alignItems: "center",
-    marginHorizontal: 6,
-    borderWidth: 1,
-  },
-  saveButton: {
-    marginTop: 24,
-    padding: 16,
-    borderRadius: 8,
-    alignItems: "center",
-  },
-
-  label: {
-    fontSize: 15,
-    fontWeight: "600",
-    marginBottom: 6,
-    marginTop: 12,
-  },
-  input: {
-    padding: 14,
-    borderRadius: 10,
-    borderWidth: 1,
-    fontSize: 16,
-    marginBottom: 8,
-  },
-  multilineInput: {
-    minHeight: 110,
-    textAlignVertical: "top",
-  },
-  actionButton: {
-    flex: 1,
-    flexDirection: "row",
-    paddingVertical: 14,
-    borderRadius: 12,
-    justifyContent: "center",
-    alignItems: "center",
-    shadowOpacity: 0.3,
-    shadowRadius: 6,
-    shadowOffset: { width: 0, height: 3 },
-    elevation: 4,
-  },
-  actionText: {
-    color: "white",
-    fontSize: 16,
-    fontWeight: "600",
-    marginLeft: 8,
-  },
-});
