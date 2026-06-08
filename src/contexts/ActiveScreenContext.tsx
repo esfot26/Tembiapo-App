@@ -32,7 +32,7 @@ export const ActiveScreenProvider = ({ children }: { children: ReactNode }) => {
 export const useActiveScreen = () => {
   const context = useContext(ActiveScreenContext)
   if (context === undefined) {
-    throw new Error("useActiveScreen must be used within an ActiveScreenProvider")
+    throw new Error("useActiveScreen debe ser usado dentro de un ActiveScreenProvider")
   }
   return context
 }

@@ -17,6 +17,7 @@ interface Props {
     selectedDate: Date | null;
     onGuardar: () => void;
     onCerrar: () => void;
+    isGuest: boolean;
 }
 
 const calcularHoraNotificacion = (hora: string, offsetMinutos: number): string => {
@@ -40,7 +41,7 @@ const opcionVencida = (hora: string, offsetMinutos: number, fechaEvento: Date | 
     return fechaNotificacion <= new Date();
 };
 
-export const EventoModal = ({ visible, form, selectedDate, onGuardar, onCerrar }: Props) => {
+export const EventoModal = ({ visible, form, selectedDate, onGuardar, onCerrar, isGuest }: Props) => {
     const { colors } = useTheme();
     const [showHoraPicker, setShowHoraPicker] = useState(false);
 
@@ -63,20 +64,47 @@ export const EventoModal = ({ visible, form, selectedDate, onGuardar, onCerrar }
                             showsVerticalScrollIndicator={false}
                             contentContainerStyle={{ paddingBottom: 20 }}
                         >
-                            {/* Título del modal */}
-                            <Text style={{
-                                fontSize: 18, fontWeight: "700",
-                                color: colors.foreground, marginBottom: 16, textAlign: "center",
-                            }}>
-                                {form.editingEvento ? "Editar evento" : "Nuevo evento"}
-                            </Text>
+                            {/* Aviso de modo invitado */}
+                            {isGuest && (
+                                <View style={{
+                                    backgroundColor: "#fef3c7",
+                                    borderRadius: 12,
+                                    padding: 16,
+                                    marginBottom: 16,
+                                    alignItems: "center",
+                                    gap: 12,
+                                }}>
+                                    <Ionicons name="lock-closed" size={32} color="#d97706" />
+                                    <Text style={{ fontSize: 14, color: "#d97706", fontWeight: "600", textAlign: "center" }}>
+                                        Modo Invitado
+                                    </Text>
+                                    <Text style={{ fontSize: 13, color: "#b45309", textAlign: "center" }}>
+                                        Para crear eventos, debes iniciar sesión con tu cuenta.
+                                    </Text>
+                                </View>
+                            )}
 
+                            {/* Título del modal - solo mostrar si no es invitado */}
+                            {!isGuest && (
+                                <Text style={{
+                                    fontSize: 18, fontWeight: "700",
+                                    color: colors.foreground, marginBottom: 16, textAlign: "center",
+                                }}>
+                                    {form.editingEvento ? "Editar evento" : "Nuevo evento"}
+                                </Text>
+                            )}
+
+                            {/* Formulario - solo mostrar si no es invitado */}
+                            {!isGuest && (
+                                <>
                             {/* Título */}
                             <TextInput
+                                editable={!isGuest}
                                 style={{
                                     borderWidth: 1, borderColor: "#d1d5db",
                                     borderRadius: 12, padding: 12, fontSize: 15,
                                     color: colors.foreground, marginBottom: 10,
+                                    opacity: isGuest ? 0.5 : 1,
                                 }}
                                 placeholder="Título"
                                 placeholderTextColor="#9ca3af"
@@ -86,6 +114,7 @@ export const EventoModal = ({ visible, form, selectedDate, onGuardar, onCerrar }
 
                             {/* Descripción */}
                             <TextInput
+                                editable={!isGuest}
                                 multiline
                                 numberOfLines={4}
                                 textAlignVertical="top"
@@ -93,6 +122,7 @@ export const EventoModal = ({ visible, form, selectedDate, onGuardar, onCerrar }
                                     borderWidth: 1, borderColor: "#d1d5db",
                                     borderRadius: 12, padding: 12, fontSize: 15,
                                     color: colors.foreground, marginBottom: 10, minHeight: 90,
+                                    opacity: isGuest ? 0.5 : 1,
                                 }}
                                 placeholder="Descripción (opcional)"
                                 placeholderTextColor="#9ca3af"
@@ -102,10 +132,12 @@ export const EventoModal = ({ visible, form, selectedDate, onGuardar, onCerrar }
 
                             {/* Hora */}
                             <TouchableOpacity
-                                onPress={() => setShowHoraPicker(true)}
+                                onPress={() => !isGuest && setShowHoraPicker(true)}
+                                disabled={isGuest}
                                 style={{
                                     borderWidth: 1, borderColor: "#d1d5db",
                                     borderRadius: 12, padding: 12, marginBottom: 12,
+                                    opacity: isGuest ? 0.5 : 1,
                                 }}
                             >
                                 <Text style={{ fontSize: 15, color: colors.foreground }}>
@@ -154,7 +186,8 @@ export const EventoModal = ({ visible, form, selectedDate, onGuardar, onCerrar }
                                 </View>
                                 <Switch
                                     value={form.notificar}
-                                    onValueChange={(val) => form.setNotificar(val)}
+                                    onValueChange={(val) => !isGuest && form.setNotificar(val)}
+                                    disabled={isGuest}
                                 />
                             </View>
 
@@ -253,14 +286,15 @@ export const EventoModal = ({ visible, form, selectedDate, onGuardar, onCerrar }
                             )}
 
                             {/* Tipos de eventos */}
-                            <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8, marginBottom: 20, marginTop: 4 }}>
+                            <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8, marginBottom: 20, marginTop: 4, opacity: isGuest ? 0.5 : 1 }}>
                                 {tiposEventos.map((t) => {
                                     const active = form.tipo === t.key;
                                     return (
                                         <TouchableOpacity
                                             key={t.key}
-                                            onPress={() => form.setTipo(t.key)}
+                                            onPress={() => !isGuest && form.setTipo(t.key)}
                                             activeOpacity={0.8}
+                                            disabled={isGuest}
                                             style={{
                                                 flexDirection: "row", alignItems: "center",
                                                 paddingVertical: 8, paddingHorizontal: 12,
@@ -280,39 +314,59 @@ export const EventoModal = ({ visible, form, selectedDate, onGuardar, onCerrar }
                                     );
                                 })}
                             </View>
+                                </>
+                            )}
 
                             {/* Botones */}
-                            <View style={{ flexDirection: "row", gap: 10 }}>
-                                <TouchableOpacity
-                                    onPress={onGuardar}
-                                    activeOpacity={0.9}
-                                    style={{
-                                        flex: 1, backgroundColor: colors.primary,
-                                        paddingVertical: 12, borderRadius: 12,
-                                        alignItems: "center", justifyContent: "center",
-                                        flexDirection: "row", gap: 6,
-                                    }}
-                                >
-                                    <Ionicons name="checkmark-circle-outline" size={20} color="#fff" />
-                                    <Text style={{ color: "#fff", fontWeight: "600" }}>
-                                        {form.editingEvento ? "Actualizar" : "Crear"}
-                                    </Text>
-                                </TouchableOpacity>
+                            {isGuest ? (
+                                <View style={{ width: "100%" }}>
+                                    <TouchableOpacity
+                                        onPress={onCerrar}
+                                        activeOpacity={0.9}
+                                        style={{
+                                            width: "100%", backgroundColor: "#dc2626",
+                                            paddingVertical: 12, borderRadius: 12,
+                                            alignItems: "center", justifyContent: "center",
+                                            flexDirection: "row", gap: 6,
+                                        }}
+                                    >
+                                        <Ionicons name="close-circle-outline" size={20} color="#fff" />
+                                        <Text style={{ color: "#fff", fontWeight: "600" }}>Volver</Text>
+                                    </TouchableOpacity>
+                                </View>
+                            ) : (
+                                <View style={{ flexDirection: "row", gap: 10 }}>
+                                    <TouchableOpacity
+                                        onPress={onGuardar}
+                                        activeOpacity={0.9}
+                                        style={{
+                                            flex: 1, backgroundColor: colors.primary,
+                                            paddingVertical: 12, borderRadius: 12,
+                                            alignItems: "center", justifyContent: "center",
+                                            flexDirection: "row", gap: 6,
+                                        }}
+                                    >
+                                        <Ionicons name="checkmark-circle-outline" size={20} color="#fff" />
+                                        <Text style={{ color: "#fff", fontWeight: "600" }}>
+                                            {form.editingEvento ? "Actualizar" : "Crear"}
+                                        </Text>
+                                    </TouchableOpacity>
 
-                                <TouchableOpacity
-                                    onPress={onCerrar}
-                                    activeOpacity={0.9}
-                                    style={{
-                                        flex: 1, backgroundColor: "#dc2626",
-                                        paddingVertical: 12, borderRadius: 12,
-                                        alignItems: "center", justifyContent: "center",
-                                        flexDirection: "row", gap: 6,
-                                    }}
-                                >
-                                    <Ionicons name="close-circle-outline" size={20} color="#fff" />
-                                    <Text style={{ color: "#fff", fontWeight: "600" }}>Cancelar</Text>
-                                </TouchableOpacity>
-                            </View>
+                                    <TouchableOpacity
+                                        onPress={onCerrar}
+                                        activeOpacity={0.9}
+                                        style={{
+                                            flex: 1, backgroundColor: "#dc2626",
+                                            paddingVertical: 12, borderRadius: 12,
+                                            alignItems: "center", justifyContent: "center",
+                                            flexDirection: "row", gap: 6,
+                                        }}
+                                    >
+                                        <Ionicons name="close-circle-outline" size={20} color="#fff" />
+                                        <Text style={{ color: "#fff", fontWeight: "600" }}>Cancelar</Text>
+                                    </TouchableOpacity>
+                                </View>
+                            )}
 
                         </ScrollView>
                     </View>

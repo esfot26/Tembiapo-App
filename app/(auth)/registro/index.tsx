@@ -1,7 +1,6 @@
-// app/registro/index.tsx
 import RegistroScreen from '@/src/features/registro';
 
 
-export default function LoginRoute() {
+export default function RegistroRoute() {
   return <RegistroScreen />;
 }

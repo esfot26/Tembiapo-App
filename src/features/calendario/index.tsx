@@ -1,10 +1,9 @@
 import React, { useEffect, useRef, useState } from "react";
-import {
-    View, ScrollView, Alert, Animated,
+import {ScrollView, Alert, Animated, View,
     Platform, ActivityIndicator, Text,
-    Button
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { Ionicons } from "@expo/vector-icons";
 import { getAuth } from "firebase/auth";
 import { FIREBASE_DB } from "@/src/services/FirebaseConfig";
 import {
@@ -14,16 +13,16 @@ import {
 import * as Notifications from "expo-notifications";
 import Toast from "react-native-toast-message";
 import { useTheme } from "@/src/contexts/TemaContext";
-
+import { useAuth } from "@/src/contexts/AuthContext";
 import { useEventos } from "./hooks/useEventos";
-import { useFormEvento } from "./hooks/useFormEvento"; // 👈 agregado
+import { useFormEvento } from "./hooks/useFormEvento"; 
 import { CalendarioHeader } from "./components/CalendarioHeader";
 import { DiasGrid } from "./components/DiasGrid";
 import { EventosDia } from "./components/EventosDia";
 import { EventoModal } from "./components/EventoModal";
 import { Evento } from "./types";
 import { cancelarNotificacion, inicializarNotificaciones, programarNotificacionEvento } from "./notificaciones";
-import { probarNotificacion } from "./notificaciones/probarNotificacion";
+
 
 export default function CalendarioScreen() {
     const [selectedDate, setSelectedDate] = useState<Date | null>(null);
@@ -31,8 +30,10 @@ export default function CalendarioScreen() {
     const [modalVisible, setModalVisible] = useState(false);
 
     const { colors, theme } = useTheme();
+    const { isGuest } = useAuth();
     const auth = getAuth();
     const usuario = auth.currentUser;
+    const alertShownRef = useRef(false);
 
     const { eventos, loading, eventosDeDia } = useEventos(usuario, selectedDate, setSelectedDate, usuario?.uid);
     const form = useFormEvento(); // 👈 reemplaza el useState
@@ -41,6 +42,18 @@ export default function CalendarioScreen() {
     const slideAnim = useRef(new Animated.Value(30)).current;
 
     const eventosDia = selectedDate ? eventosDeDia(selectedDate) : [];
+
+    useEffect(() => {
+        // Mostrar alerta una sola vez si es invitado
+        if (isGuest && !alertShownRef.current) {
+            alertShownRef.current = true;
+            Alert.alert(
+                "Acceso Limitado",
+                "Para acceder a tus eventos, debes iniciar sesión.",
+                [{ text: "OK", style: "default" }]
+            );
+        }
+    }, [isGuest]);
 
     useEffect(() => {
         inicializarNotificaciones();
@@ -65,6 +78,10 @@ export default function CalendarioScreen() {
     }, [selectedDate]);
 
     const abrirModalNuevo = () => {
+        if (isGuest) {
+            Alert.alert("No permitido", "Los invitados no pueden crear eventos. Por favor, inicia sesión.");
+            return;
+        }
         if (!selectedDate) {
             Alert.alert("Selecciona un día", "Primero elige una fecha en el calendario.");
             return;
@@ -74,6 +91,10 @@ export default function CalendarioScreen() {
     };
 
     const abrirModalEditar = (ev: Evento) => {
+        if (isGuest) {
+            Alert.alert("No permitido", "Los invitados no pueden editar eventos. Por favor, inicia sesión.");
+            return;
+        }
         setSelectedDate(ev.fecha);
         form.cargarEvento(ev); // ✅ ahora existe
         setModalVisible(true);
@@ -85,6 +106,12 @@ export default function CalendarioScreen() {
     };
 
     const guardarEvento = async () => {
+
+        if (isGuest) {
+            Alert.alert("No permitido", "Los invitados no pueden crear eventos. Por favor, inicia sesión.");
+            return;
+        }
+
         if (!usuario || !selectedDate || !form.titulo.trim()) {
             Alert.alert("Error", "Completa el título y la fecha.");
             return;
@@ -153,6 +180,10 @@ export default function CalendarioScreen() {
 
     const eliminarEvento = async (ev: Evento) => {
         if (!usuario) return;
+        if (isGuest) {
+            Alert.alert("No permitido", "Los invitados no pueden eliminar eventos. Por favor, inicia sesión.");
+            return;
+        }
 
         Alert.alert("Eliminar evento", "¿Estás seguro de que deseas eliminarlo?", [
             { text: "Cancelar", style: "cancel" },
@@ -200,31 +231,45 @@ export default function CalendarioScreen() {
                 }}
             />
 
-            <ScrollView
-                showsVerticalScrollIndicator={false}
-                contentContainerStyle={{ paddingHorizontal: 4, paddingBottom: 16 }}
-            >
-                <DiasGrid
-                    currentDate={currentDate}
-                    selectedDate={selectedDate}
-                    eventos={eventos}
-                    onSelectDate={setSelectedDate}
-                />
-
-                {selectedDate && (
-                    <EventosDia
+            {isGuest ? (
+                // Mensaje para invitados
+                <View style={{ flex: 1, justifyContent: "center", alignItems: "center", paddingHorizontal: 32 }}>
+                    <Ionicons name="lock-closed" size={64} color={colors.mutedForeground} />
+                    <Text style={{ fontSize: 18, fontWeight: "700", color: colors.foreground, marginTop: 16, textAlign: "center" }}>
+                        Acceso Limitado
+                    </Text>
+                    <Text style={{ fontSize: 14, color: colors.mutedForeground, marginTop: 8, textAlign: "center", lineHeight: 20 }}>
+                        Para acceder a tus eventos, debes iniciar sesión con tu cuenta.
+                    </Text>
+                </View>
+            ) : (
+                <ScrollView
+                    showsVerticalScrollIndicator={false}
+                    contentContainerStyle={{ paddingHorizontal: 4, paddingBottom: 16 }}
+                >
+                    <DiasGrid
+                        currentDate={currentDate}
                         selectedDate={selectedDate}
-                        eventosDia={eventosDia}
-                        colors={colors}
-                        theme={theme}
-                        fadeAnim={fadeAnim}
-                        slideAnim={slideAnim}
-                        onAgregarEvento={abrirModalNuevo}
-                        onEditarEvento={abrirModalEditar}
-                        onEliminarEvento={eliminarEvento}
+                        eventos={eventos}
+                        onSelectDate={setSelectedDate}
                     />
-                )}
-            </ScrollView>
+
+                    {selectedDate && (
+                        <EventosDia
+                            selectedDate={selectedDate}
+                            eventosDia={eventosDia}
+                            colors={colors}
+                            theme={theme}
+                            fadeAnim={fadeAnim}
+                            slideAnim={slideAnim}
+                            onAgregarEvento={abrirModalNuevo}
+                            onEditarEvento={abrirModalEditar}
+                            onEliminarEvento={eliminarEvento}
+                            isGuest={isGuest}
+                        />
+                    )}
+                </ScrollView>
+            )}
             {/* <Button title="Probar notificación" onPress={probarNotificacion} /> */}
 
             <EventoModal
@@ -233,6 +278,7 @@ export default function CalendarioScreen() {
                 selectedDate={selectedDate} 
                 onGuardar={guardarEvento}
                 onCerrar={cerrarModal}
+                isGuest={isGuest}
             />
         </SafeAreaView>
     );

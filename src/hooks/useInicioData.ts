@@ -27,6 +27,10 @@ export const useInicioData = () => {
 
     // 1. Obtener datos del perfil del usuario (One-time fetch)
     const fetchUserData = async (uid: string) => {
+        if (!uid) {
+            setLoading(false);
+            return;
+        }
         try {
             const userDoc = await getDoc(doc(FIREBASE_DB, "usuarios", uid));
             if (userDoc.exists()) {
@@ -41,7 +45,8 @@ export const useInicioData = () => {
                 });
             }
         } catch (error) {
-            console.error("Error al obtener perfil:", error);
+            console.error("Error fetching user data:", error);
+            setLoading(false);
         }
     };
 

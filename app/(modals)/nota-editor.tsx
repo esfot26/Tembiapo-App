@@ -10,6 +10,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTheme } from "@/src/contexts/TemaContext";
+import { useAuth } from "@/src/contexts/AuthContext";
 import { Nota, Prioridad } from "@/src/services/NotasServices";
 import { useNotas } from "@/src/contexts/NotasContext";
 import { renderCategoriaSelector } from "@/src/features/notas/components/renderCategoria";
@@ -17,6 +18,7 @@ import { renderPrioridadSelector } from "@/src/features/notas/components/renderP
 import { styles } from "@/src/features/notas/styles/nota.editor.styles";
 export default function ModalScreen() {
   const { colors } = useTheme();
+  const { isGuest } = useAuth();
   const { crearNota, actualizarNota } = useNotas();
   const params = useLocalSearchParams();
   const insets = useSafeAreaInsets();
@@ -154,6 +156,29 @@ export default function ModalScreen() {
         contentContainerStyle={{ padding: 16, paddingBottom: 40 }}
         showsVerticalScrollIndicator={false}
       >
+        {/* Aviso de modo invitado */}
+        {isGuest && (
+          <View style={{
+            backgroundColor: "#fef3c7",
+            borderRadius: 12,
+            padding: 16,
+            marginBottom: 16,
+            alignItems: "center",
+            gap: 12,
+          }}>
+            <Ionicons name="lock-closed" size={32} color="#d97706" />
+            <Text style={{ fontSize: 14, color: "#d97706", fontWeight: "600", textAlign: "center" }}>
+              Modo Invitado
+            </Text>
+            <Text style={{ fontSize: 13, color: "#b45309", textAlign: "center" }}>
+              Para crear notas, debes iniciar sesión con tu cuenta.
+            </Text>
+          </View>
+        )}
+
+        {/* Formulario - solo mostrar si no es invitado */}
+        {!isGuest ? (
+          <>
         {/* --- TITULO --- */}
         <Text style={[styles.label, { color: colors.foreground }]}>Título *</Text>
         <TextInput
@@ -238,6 +263,20 @@ export default function ModalScreen() {
             <Text style={styles.actionText}>Cancelar</Text>
           </TouchableOpacity>
         </View>
+          </>
+        ) : (
+          // Solo botón cancelar en modo invitado
+          <View style={{ marginTop: 28 }}>
+            <TouchableOpacity
+              onPress={handleBack}
+              activeOpacity={0.8}
+              style={[styles.actionButton, { backgroundColor: colors.destructive, width: "100%" }]}
+            >
+              <Ionicons name="close-circle-outline" size={22} color="white" />
+              <Text style={styles.actionText}>Volver</Text>
+            </TouchableOpacity>
+          </View>
+        )}
       </ScrollView>
     </View>
   );

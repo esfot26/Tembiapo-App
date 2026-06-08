@@ -22,17 +22,18 @@ export default function VisorArchivo() {
     const [pdfFallback, setPdfFallback] = useState(false);
 
     const handleBack = () => {
-        if (padreId) {
+        const parentId = Array.isArray(padreId) ? padreId[0] : padreId;
+        const rawPath = Array.isArray(path) ? path[0] : path;   // useLocalSearchParams puede devolver string[]
 
+        if (parentId) {
             router.replace({
                 pathname: "/(tabs)/carpeta",
                 params: {
-                    padreId: padreId ?? "",
-                    path: JSON.stringify(path ?? []),
+                    padreId: parentId,
+                    path: rawPath ?? "[]",   
                 },
             });
         } else {
-            // Si no hay carpeta padre, volvemos al inicio
             router.replace("/(tabs)/carpeta");
         }
     };

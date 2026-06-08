@@ -1,88 +1,105 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, TouchableOpacity, Text, Animated } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, Text, Dimensions } from 'react-native';
+import Animated, { FadeInUp, FadeOutDown } from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
 
-interface FabMenuProps {
+export function FabMenu({
+    visible,
+    padreId,
+    colors,
+    insets,
+    onToggle,
+    onCreateFolder,
+    onUpload,
+}: {
+    visible: boolean;
+    padreId?: string;
+    colors: any;
+    insets: any;
+    onToggle: () => void;
     onCreateFolder: () => void;
-    onUploadFile: () => void;
-}
-
-export const FabMenu = ({ onCreateFolder, onUploadFile }: FabMenuProps) => {
-    const [isOpen, setIsOpen] = useState(false);
-
-    const toggleMenu = () => setIsOpen(!isOpen);
+    onUpload: () => void;
+}) {
+    const bottomOffset = insets.bottom + Math.max(88, Math.floor(Dimensions.get("window").height * 0.08));
 
     return (
-        <View style={styles.container}>
-            {isOpen && (
-                <View style={styles.menu}>
-                    <TouchableOpacity
-                        style={styles.menuItem}
-                        onPress={() => { onUploadFile(); setIsOpen(false); }}
-                    >
-                        <Text style={styles.menuText}>Subir Archivo</Text>
-                        <Ionicons name="document-outline" size={20} color="#333" />
+        <View style={[styles.fab, { bottom: bottomOffset }]}>
+            {visible && (
+                <Animated.View
+                    entering={FadeInUp.springify()}
+                    exiting={FadeOutDown}
+                    style={styles.fabMenu}
+                >
+                    <TouchableOpacity onPress={onCreateFolder} activeOpacity={0.8} style={styles.fabMenuItem}>
+                        <Ionicons name="folder-open-outline" size={26} color="#4B5563" />
                     </TouchableOpacity>
 
-                    <TouchableOpacity
-                        style={styles.menuItem}
-                        onPress={() => { onCreateFolder(); setIsOpen(false); }}
-                    >
-                        <Text style={styles.menuText}>Crear Carpeta</Text>
-                        <Ionicons name="folder-outline" size={20} color="#333" />
-                    </TouchableOpacity>
-                </View>
+                    {padreId && (
+                        <TouchableOpacity onPress={onUpload} activeOpacity={0.8} style={styles.fabMenuItem}>
+                            <Ionicons name="cloud-upload-outline" size={26} color="#2563EB" />
+                        </TouchableOpacity>
+                    )}
+                </Animated.View>
             )}
 
-            <TouchableOpacity style={styles.fab} onPress={toggleMenu}>
-                <Ionicons name={isOpen ? "close" : "add"} size={28} color="#fff" />
+            <TouchableOpacity
+                onPress={onToggle}
+                activeOpacity={0.9}
+                style={[
+                    styles.fabMain,
+                    {
+                        backgroundColor: colors.primary,
+                        shadowColor: "#000",
+                    },
+                ]}
+            >
+                <Ionicons
+                    name={visible ? "close" : "add"}
+                    size={32}
+                    color={colors.primaryForeground ?? "#fff"}
+                />
             </TouchableOpacity>
         </View>
     );
-};
+}
+
 
 const styles = StyleSheet.create({
-    container: {
-        position: 'absolute',
-        bottom: 24,
-        right: 24,
-        alignItems: 'flex-end',
-    },
-    menu: {
-        marginBottom: 16,
-        alignItems: 'flex-end',
-    },
-    menuItem: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        backgroundColor: '#fff',
-        paddingVertical: 10,
-        paddingHorizontal: 16,
-        borderRadius: 8,
-        marginBottom: 12,
-        shadowColor: '#000',
-        shadowOpacity: 0.1,
-        shadowOffset: { width: 0, height: 2 },
-        shadowRadius: 4,
-        elevation: 3,
-    },
-    menuText: {
-        marginRight: 10,
-        fontSize: 14,
-        fontWeight: '500',
-        color: '#333',
-    },
     fab: {
-        backgroundColor: '#000', // Minimalista y moderno
-        width: 56,
-        height: 56,
-        borderRadius: 28,
-        justifyContent: 'center',
-        alignItems: 'center',
-        shadowColor: '#000',
-        shadowOpacity: 0.3,
-        shadowOffset: { width: 0, height: 4 },
+        position: "absolute",
+        right: 16,
+        alignItems: "center",
+    },
+    fabMenu: {
+        marginBottom: 16,
+        gap: 12,
+        alignItems: "center",
+    },
+    fabMenuItem: {
+        width: 48,
+        height: 48,
+        borderRadius: 24,
+        backgroundColor: "#fff",
+        justifyContent: "center",
+        alignItems: "center",
+        shadowColor: "#000",
+        shadowOpacity: 0.15,
         shadowRadius: 6,
+        shadowOffset: { width: 0, height: 3 },
+        elevation: 4,
+        borderWidth: 1,
+        borderColor: "#e5e7eb",
+    },
+    fabMain: {
+        width: 60,
+        height: 60,
+        borderRadius: 30,
+        justifyContent: "center",
+        alignItems: "center",
+        shadowOpacity: 0.25,
+        shadowRadius: 8,
+        shadowOffset: { width: 0, height: 4 },
         elevation: 6,
     },
+
 });

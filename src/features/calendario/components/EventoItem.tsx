@@ -10,15 +10,17 @@ interface Props {
     theme: string;
     onPress: (ev: Evento) => void;
     onDelete: (ev: Evento) => void;
+    isGuest: boolean;
 }
 
-export const EventoItem = ({ evento, colors, theme, onPress, onDelete }: Props) => {
+export const EventoItem = ({ evento, colors, theme, onPress, onDelete, isGuest }: Props) => {
     const info = tiposEventos.find((t) => t.key === evento.tipo);
 
     return (
         <TouchableOpacity
-            onPress={() => onPress(evento)}
-            activeOpacity={0.8}
+            onPress={() => !isGuest && onPress(evento)}
+            activeOpacity={isGuest ? 1 : 0.8}
+            disabled={isGuest}
             style={{
                 flexDirection: "row",
                 alignItems: "center",
@@ -28,6 +30,7 @@ export const EventoItem = ({ evento, colors, theme, onPress, onDelete }: Props) 
                 marginBottom: 8,
                 borderWidth: 1,
                 borderColor: colors.border,
+                opacity: isGuest ? 0.7 : 1,
             }}
         >
             <View style={{
@@ -72,8 +75,17 @@ export const EventoItem = ({ evento, colors, theme, onPress, onDelete }: Props) 
                 ) : null}
             </View>
 
-            <TouchableOpacity onPress={() => onDelete(evento)} activeOpacity={0.7}>
-                <Ionicons name="trash-outline" size={18} color={colors.destructive} />
+            <TouchableOpacity 
+                onPress={() => onDelete(evento)} 
+                activeOpacity={0.7}
+                disabled={isGuest}
+            >
+                <Ionicons 
+                    name="trash-outline" 
+                    size={18} 
+                    color={isGuest ? colors.mutedForeground : colors.destructive} 
+                    style={{ opacity: isGuest ? 0.5 : 1 }}
+                />
             </TouchableOpacity>
         </TouchableOpacity>
     );

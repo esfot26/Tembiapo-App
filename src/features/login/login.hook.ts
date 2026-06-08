@@ -1,17 +1,30 @@
 import { FIREBASE_AUTH, FIREBASE_DB } from "@/src/services/FirebaseConfig";
 import { useRouter } from "expo-router";
-import { GoogleSignin, statusCodes } from "@react-native-google-signin/google-signin";
+//import { GoogleSignin, statusCodes } from "@react-native-google-signin/google-signin";
 import { GoogleAuthProvider, signInWithCredential, signInWithEmailAndPassword } from "firebase/auth";
 import { doc, getDoc, setDoc } from "firebase/firestore";
 import { useEffect, useState } from "react";
 import Toast from "react-native-toast-message";
 import * as SecureStore from "expo-secure-store";
+import Constants from 'expo-constants';
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
-// Configurar Google Sign In una sola vez
-GoogleSignin.configure({
-    webClientId: "983107385937-27vc2fuut7kn06sr376njbib4lhnnq3p.apps.googleusercontent.com",
-    offlineAccess: true,
-});
+
+const isExpoGo = Constants.appOwnership === 'expo';
+
+
+let GoogleSignin: any = null;
+let statusCodes: any = {};
+
+if (!isExpoGo) {
+    const googleModule = require('@react-native-google-signin/google-signin');
+    GoogleSignin = googleModule.GoogleSignin;
+    statusCodes = googleModule.statusCodes;
+    GoogleSignin.configure({
+        webClientId: "983107385937-27vc2fuut7kn06sr376njbib4lhnnq3p.apps.googleusercontent.com",
+        offlineAccess: true,
+    });
+}
 
 export const LoginLogic = () => {
     const router = useRouter();
@@ -26,7 +39,9 @@ export const LoginLogic = () => {
     };
 
     const crearUsuarioEnFirestore = async (firebaseUser: any) => {
+        const inicio = Date.now();
         try {
+
             const userDocRef = doc(FIREBASE_DB, "usuarios", firebaseUser.uid);
             const userDoc = await getDoc(userDocRef);
 
@@ -48,6 +63,7 @@ export const LoginLogic = () => {
     };
 
     const handleLogin = async () => {
+        const inicio = Date.now();
         if (!email.trim() && !password.trim()) {
             Toast.show({ type: "error", text1: "Campos requeridos", text2: "Por favor ingresa tu correo y contraseña." });
             return;
@@ -80,10 +96,23 @@ export const LoginLogic = () => {
 
             await guardarUID(user.uid);
             await crearUsuarioEnFirestore(user);
+
+            const tiempoRespuesta = Date.now() - inicio;
+            console.log(`Tiempo de inicio de sesión: ${tiempoRespuesta}ms`);
+            console.log(`[PRUEBA] handleLogin: ${tiempoRespuesta}ms`);
+            if (tiempoRespuesta > 2000) {
+                console.warn(`⚠️ Tiempo excedido: ${tiempoRespuesta}ms`);
+            }
+
+
             Toast.show({ type: "success", text1: "¡Bienvenido!", text2: "Inicio de sesión exitoso." });
             router.replace("/(tabs)/inicio");
 
         } catch (error: any) {
+
+            const tiempoRespuesta = Date.now() - inicio;
+            console.log(`[PRUEBA] handleLogin (error): ${tiempoRespuesta}ms`);
+
             const firebaseErrors: Record<string, { title: string; message: string }> = {
                 "auth/wrong-password": { title: "Contraseña incorrecta", message: "La contraseña ingresada no es válida." },
                 "auth/user-not-found": { title: "Usuario no encontrado", message: "No existe una cuenta con ese correo." },
@@ -104,13 +133,28 @@ export const LoginLogic = () => {
         }
     };
 
-    // ── Google Login nativo ─────────────────────────────────────
+
     const handleLoginGoogle = async () => {
+
+        if (isExpoGo) {
+            Toast.show({
+                type: "info",
+                text1: "No disponible en Expo Go",
+                text2: "Usá email y contraseña para probar."
+            });
+            return;
+        }
+
         try {
+
             setLoading(true);
 
-            await GoogleSignin.hasPlayServices();
+            await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
+            
+            try { await GoogleSignin.revokeAccess(); } catch (_) { }
+            try { await GoogleSignin.signOut(); } catch (_) { }
             const userInfo = await GoogleSignin.signIn();
+            console.log("userInfo completo:", JSON.stringify(userInfo));
             const idToken = userInfo.data?.idToken;
 
             if (!idToken) {
@@ -125,12 +169,15 @@ export const LoginLogic = () => {
             await guardarUID(user.uid);
             await crearUsuarioEnFirestore(user);
 
+            await AsyncStorage.removeItem("@tembiapo:modo_invitado"); 
+
             Toast.show({ type: "success", text1: "¡Bienvenido!", text2: `Hola, ${user.displayName ?? "usuario"}` });
             router.replace("/(tabs)/inicio");
 
         } catch (error: any) {
             if (error.code === statusCodes.SIGN_IN_CANCELLED) {
                 // usuario canceló, no mostramos error
+                console.log("Login cancelado por el usuario");
             } else if (error.code === statusCodes.IN_PROGRESS) {
                 Toast.show({ type: "info", text1: "En progreso", text2: "Ya hay un inicio de sesión en curso." });
             } else if (error.code === statusCodes.PLAY_SERVICES_NOT_AVAILABLE) {

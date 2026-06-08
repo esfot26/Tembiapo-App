@@ -84,7 +84,7 @@ export default function VerificarCorreo() {
         }
     };
 
-    // ✅ Cierra sesión y va al login
+
     const volverAlLogin = async () => {
         await signOut(FIREBASE_AUTH);
         router.replace("/(auth)/login");
@@ -119,8 +119,9 @@ export default function VerificarCorreo() {
                         <View style={styles.buttonRow}>
                             <BotonGradiente
                                 text={checking ? "Comprobando..." : "Ya verifiqué ✓"}
-                                onPress={verificarAhora}
-                                disabled={checking}
+                                onPress={() => {
+                                    if (!checking) verificarAhora();
+                                }}
                                 colors={["#2563EB", "#1E3A8A"]}
                             />
                         </View>
@@ -133,8 +134,9 @@ export default function VerificarCorreo() {
                                         cooldown > 0 ? `Reenviar en ${cooldown}s` :
                                             "Reenviar correo"
                                 }
-                                onPress={reenviar}
-                                disabled={cooldown > 0 || sending}
+                                onPress={() => {
+                                    if (!sending && cooldown === 0) reenviar();
+                                }}
                                 colors={["#64748B", "#475569"]}
                             />
                         </View>

@@ -9,7 +9,10 @@ export const useEventos = (usuario: User | null, selectedDate: Date | null, setS
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        if (!uid) return;
+        if (!uid) {
+            setLoading(false);
+            return;
+        }
 
         const ref = collection(FIREBASE_DB, "eventos", uid, "usuario_eventos");
 

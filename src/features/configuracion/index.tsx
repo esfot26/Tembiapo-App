@@ -1,11 +1,10 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import {
     View,
     Text,
     StyleSheet,
     ScrollView,
     TouchableOpacity,
-    Animated,
     Alert,
 } from "react-native";
 import {
@@ -15,6 +14,10 @@ import {
     ChevronRight,
     Moon,
     Sun,
+    AlertCircle,
+    Eye,
+    EyeOff,
+    PlayCircle,
 } from "lucide-react-native";
 import { Stack, useRouter } from "expo-router";
 import { useTheme } from "@/src/contexts/TemaContext";
@@ -22,32 +25,45 @@ import { useAuth } from "@/src/contexts/AuthContext";
 import { getAuth, signOut } from "firebase/auth";
 import { FIREBASE_APP, FIREBASE_DB } from "@/src/services/FirebaseConfig";
 import { doc, getDoc } from "firebase/firestore";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import Toast from "react-native-toast-message";
+import { SettingItem } from "./components/SettingItem";
 
 export default function ConfiguracionScreen() {
     const { colors, theme, toggleTheme } = useTheme();
     const { usuario } = useAuth();
     const router = useRouter();
     const auth = getAuth(FIREBASE_APP);
-    const [perfil, setPerfil] = React.useState<any | null>(null);
+    const [perfil, setPerfil] = useState<any | null>(null);
+    const [modoInvitado, setModoInvitado] = useState(false);
+    const [cargando, setCargando] = useState(true);
 
-    React.useEffect(() => {
-        const cargarPerfil = async () => {
+    useEffect(() => {
+        const verificarModoYCargarPerfil = async () => {
             try {
-                if (!usuario?.uid) return;
-                const ref = doc(FIREBASE_DB, "usuarios", usuario.uid);
-                const snap = await getDoc(ref);
-                if (snap.exists()) {
-                    setPerfil(snap.data());
+                // Verificar modo invitado
+                const invitado = await AsyncStorage.getItem("@tembiapo:modo_invitado");
+                const esInvitado = invitado === "true";
+                setModoInvitado(esInvitado);
+
+                // Cargar perfil solo si no es invitado y hay usuario
+                if (!esInvitado && usuario?.uid) {
+                    const ref = doc(FIREBASE_DB, "usuarios", usuario.uid);
+                    const snap = await getDoc(ref);
+                    if (snap.exists()) {
+                        setPerfil(snap.data());
+                    }
                 }
             } catch (e) {
-                console.log("Error cargando perfil:", e);
+                console.log("Error:", e);
+            } finally {
+                setCargando(false);
             }
         };
-        cargarPerfil();
+        verificarModoYCargarPerfil();
     }, [usuario?.uid]);
 
-    // 🔹 Cerrar sesión
+    // 🔹 Cerrar sesión (para usuarios autenticados)
     const handleLogout = async () => {
         Alert.alert("Cerrar Sesión", "¿Deseas salir de tu cuenta?", [
             { text: "Cancelar", style: "cancel" },
@@ -57,7 +73,13 @@ export default function ConfiguracionScreen() {
                 onPress: async () => {
                     try {
                         await signOut(auth);
-                        router.replace("/(auth)/login");
+                        await AsyncStorage.removeItem("@tembiapo:modo_invitado");
+                        router.replace("/(onboarding)/welcome");
+                        Toast.show({
+                            type: "success",
+                            text1: "Sesión cerrada",
+                            text2: "Has cerrado sesión correctamente",
+                        });
                     } catch (error) {
                         console.error("Error al cerrar sesión:", error);
                         Toast.show({
@@ -70,7 +92,146 @@ export default function ConfiguracionScreen() {
         ]);
     };
 
+    // 🔹 Salir del modo invitado
+    const handleSalirModoInvitado = () => {
+        Alert.alert(
+            "Salir del modo invitado",
+            "¿Deseas salir del modo invitado? Podrás iniciar sesión para guardar tus datos.",
+            [
+                { text: "Cancelar", style: "cancel" },
+                {
+                    text: "Salir",
+                    onPress: async () => {
+                        await AsyncStorage.removeItem("@tembiapo:modo_invitado");
+                        router.replace("/(onboarding)/welcome");
+                        Toast.show({
+                            type: "info",
+                            text1: "Modo invitado",
+                            text2: "Has salido del modo invitado",
+                        });
+                    },
+                },
+            ]
+        );
+    };
+
+    // 🔹 Reiniciar tutorial (onboarding)
+    const handleReiniciarTutorial = () => {
+        Alert.alert(
+            "Reiniciar tutorial",
+            "¿Deseas ver el tutorial de bienvenida nuevamente?",
+            [
+                { text: "Cancelar", style: "cancel" },
+                {
+                    text: "Reiniciar",
+                    onPress: async () => {
+                        await AsyncStorage.removeItem("@tembiapo:onboarding_complete");
+                        await AsyncStorage.removeItem("@tembiapo:eula_aceptado");
+                        router.replace("/(onboarding)/slider");
+                        Toast.show({
+                            type: "info",
+                            text1: "Tutorial reiniciado",
+                            text2: "Verás la introducción en tu próxima visita",
+                        });
+                    },
+                },
+            ]
+        );
+    };
+
     const isDark = theme === "dark";
+
+    // Mostrar pantalla de carga
+    if (cargando) {
+        return (
+            <View style={[styles.container, { backgroundColor: colors.background, justifyContent: "center", alignItems: "center" }]}>
+                <Text style={{ color: colors.foreground }}>Cargando...</Text>
+            </View>
+        );
+    }
+
+    // ========== VISTA PARA MODO INVITADO ==========
+    if (modoInvitado) {
+        return (
+            <View style={[styles.container, { backgroundColor: colors.background }]}>
+                <Stack.Screen
+                    options={{
+                        title: "Configuración",
+                        headerStyle: { backgroundColor: colors.card },
+                        headerShadowVisible: false,
+                        headerTitleStyle: { color: colors.foreground },
+                    }}
+                />
+
+                <ScrollView
+                    style={styles.scrollView}
+                    contentContainerStyle={{ paddingBottom: 40 }}
+                    showsVerticalScrollIndicator={false}
+                >
+                    {/* HEADER para invitado */}
+                    <View style={styles.header}>
+                        <View
+                            style={[
+                                styles.avatarContainer,
+                                { backgroundColor: colors.primary || "#F59E0B" },
+                            ]}
+                        >
+                            <Eye size={40} color="#FFF" />
+                        </View>
+                        <Text style={[styles.name, { color: colors.foreground }]}>
+                            Modo Invitado
+                        </Text>
+                        <Text style={[styles.email, { color: colors.mutedForeground }]}>
+                            Estás explorando la app sin cuenta
+                        </Text>
+                        <View style={[styles.badge, { backgroundColor: colors.background}]}>
+                            <AlertCircle size={14} color={colors.primary} />
+                            <Text style={[styles.badgeText, { color: colors.foreground }]}>
+                                Datos no guardados en la nube
+                            </Text>
+                        </View>
+                    </View>
+
+                    {/* CONFIGURACIÓN para invitado */}
+                    <View style={styles.settingsSection}>
+                        <Text style={[styles.sectionTitle, { color: colors.foreground }]}>
+                            Configuración
+                        </Text>
+
+                        <SettingItem
+                            title={`Tema: ${isDark ? "Oscuro" : "Claro"}`}
+                            icon={isDark ? Moon : Sun}
+                            color={isDark ? "#334155" : "#FACC15"}
+                            onPress={toggleTheme}
+                        />
+
+                        <SettingItem
+                            title="Ayuda y Soporte"
+                            icon={HelpCircle}
+                            color="#10B981"
+                            onPress={() => Toast.show({ type: "info", text1: "🔜 Próximamente 🔜" })}
+                        />
+
+                        <SettingItem
+                            title="Salir del modo invitado"
+                            icon={LogOut}
+                            color={colors.destructive || "#DC2626"}
+                            onPress={handleSalirModoInvitado}
+                            showChevron={false}
+                        />
+                    </View>
+
+                    <Text style={[styles.version, { color: colors.mutedForeground }]}>
+                        Versión 1.0.1
+                    </Text>
+                </ScrollView>
+            </View>
+        );
+    }
+
+    // ========== VISTA PARA USUARIO AUTENTICADO ==========
+    const nombreMostrar = perfil?.nombreCompleto || usuario?.displayName || "Usuario";
+    const emailMostrar = perfil?.email || usuario?.email || "";
 
     return (
         <View style={[styles.container, { backgroundColor: colors.background }]}>
@@ -88,7 +249,7 @@ export default function ConfiguracionScreen() {
                 contentContainerStyle={{ paddingBottom: 40 }}
                 showsVerticalScrollIndicator={false}
             >
-                {/* HEADER */}
+                {/* HEADER para usuario autenticado */}
                 <View style={styles.header}>
                     <View
                         style={[
@@ -97,18 +258,18 @@ export default function ConfiguracionScreen() {
                         ]}
                     >
                         <Text style={styles.avatarText}>
-                            {(perfil?.nombreCompleto?.charAt(0) || usuario?.displayName?.charAt(0) || "U").toUpperCase()}
+                            {nombreMostrar.charAt(0).toUpperCase()}
                         </Text>
                     </View>
                     <Text style={[styles.name, { color: colors.foreground }]}>
-                        {perfil?.nombreCompleto || usuario?.displayName || "Usuario"}
+                        {nombreMostrar}
                     </Text>
-                    <Text style={[styles.email, { color: colors.foreground }]}>
-                        {perfil?.email || usuario?.email || ""}
+                    <Text style={[styles.email, { color: colors.mutedForeground }]}>
+                        {emailMostrar}
                     </Text>
                 </View>
 
-                {/* CONFIGURACIÓN */}
+                {/* CONFIGURACIÓN para usuario autenticado */}
                 <View style={styles.settingsSection}>
                     <Text style={[styles.sectionTitle, { color: colors.foreground }]}>
                         Configuración
@@ -139,7 +300,6 @@ export default function ConfiguracionScreen() {
                         icon={isDark ? Moon : Sun}
                         color={isDark ? "#334155" : "#FACC15"}
                         onPress={toggleTheme}
-
                     />
 
                     <SettingItem
@@ -158,7 +318,7 @@ export default function ConfiguracionScreen() {
                     />
                 </View>
 
-                <Text style={[styles.version, { color: colors.foreground }]}>
+                <Text style={[styles.version, { color: colors.mutedForeground }]}>
                     Versión 1.0.1
                 </Text>
             </ScrollView>
@@ -166,103 +326,34 @@ export default function ConfiguracionScreen() {
     );
 }
 
-/* 📍 COMPONENTES REUTILIZABLES */
-
-function SettingItem({ title, icon: Icon, color, onPress, showChevron = true }: {
-    title: string;
-    icon: React.ComponentType<{ color: string; size: number }>;
-    color: string;
-    onPress: () => void;
-    showChevron?: boolean;
-}) {
-    const scale = React.useRef(new Animated.Value(1)).current;
-    const { colors, theme } = useTheme(); 
-    const isDark = theme === "dark";
-    return (
-        <TouchableOpacity
-            activeOpacity={0.7}
-            onPressIn={() =>
-                Animated.spring(scale, { toValue: 0.97, useNativeDriver: true }).start()
-            }
-            onPressOut={() =>
-                Animated.spring(scale, {
-                    toValue: 1,
-                    friction: 3,
-                    useNativeDriver: true,
-                }).start()
-            }
-            onPress={onPress}
-        >
-            <Animated.View
-                style={{
-                    flexDirection: "row",
-                    alignItems: "center",
-                    backgroundColor: isDark ? "#FFFFFF11" : "#00000009",
-                    borderRadius: 14,
-                    padding: 14,
-                    marginBottom: 10,
-                    transform: [{ scale }],
-                }}
-            >
-                <View style={[styles.iconContainer, { backgroundColor: color }]}>
-                    <Icon color="#fff" size={20} />
-                </View>
-                <Text
-                    style={{
-                        flex: 1,
-                        fontSize: 16,
-                        fontWeight: "600",
-                        color: colors.foreground,
-                    }}
-                >
-
-                    {title}</Text>
-                {showChevron && (
-                    <ChevronRight
-                        color={isDark ? "#9CA3AF" : "#4B5563"} // ✅ cambia según modo
-                        size={20}
-                    />
-                )}
-            </Animated.View>
-        </TouchableOpacity>
-    );
-}
-
-function Stat({ label, value, color }: {
-    label: string;
-    value: string;
-    color: string;
-}) {
-    return (
-        <View style={{ flex: 1, alignItems: "center" }}>
-            <Text style={{ fontSize: 22, fontWeight: "700", color }}>{value}</Text>
-            <Text style={{ fontSize: 13, color: "#6B7280", fontWeight: "500" }}>
-                {label}
-            </Text>
-        </View>
-    );
-}
-
-function Divider({ color }: { color: string }) {
-    return <View style={{ width: 1, height: "100%", backgroundColor: color }} />;
-}
-
-/* 💅 ESTILOS BASE */
 const styles = StyleSheet.create({
-    container: { flex: 1, borderColor: "#E5E7EB", borderWidth: 1, },
+    container: { flex: 1 },
     scrollView: { flex: 1 },
-    header: { alignItems: "center", padding: 50 },
+    header: { alignItems: "center", paddingTop: 30, paddingBottom: 20, paddingHorizontal: 20 },
     avatarContainer: {
         width: 80,
         height: 80,
-        borderRadius: 50,
+        borderRadius: 40,
         alignItems: "center",
         justifyContent: "center",
         marginBottom: 12,
     },
     avatarText: { fontSize: 40, fontWeight: "500", color: "#FFF" },
-    name: { fontSize: 22, fontWeight: "700" },
-    email: { fontSize: 14 },
+    name: { fontSize: 22, fontWeight: "700", marginBottom: 4 },
+    email: { fontSize: 14, marginBottom: 8 },
+    badge: {
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 8,
+        paddingHorizontal: 12,
+        paddingVertical: 6,
+        borderRadius: 20,
+        marginTop: 8,
+    },
+    badgeText: {
+        fontSize: 12,
+        fontWeight: "500",
+    },
     statsRow: {
         flexDirection: "row",
         borderRadius: 16,
@@ -276,14 +367,5 @@ const styles = StyleSheet.create({
         marginBottom: 12,
     },
     settingsSection: { paddingHorizontal: 20 },
-    iconContainer: {
-        width: 40,
-        height: 40,
-        borderRadius: 20,
-        alignItems: "center",
-        justifyContent: "center",
-        marginRight: 16,
-    },
-    //settingTitle: { flex: 1, fontSize: 16, fontWeight: "600", color: "#F3F4F6" },
     version: { textAlign: "center", marginTop: 50, marginBottom: 50 },
 });

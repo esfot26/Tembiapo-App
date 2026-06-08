@@ -15,7 +15,6 @@ interface ActionModalProps {
     };
 }
 
-
 export default function ActionModal({
     visible,
     onClose,

@@ -155,6 +155,23 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "500",
   },
+
+  invitadoBanner: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    padding: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+    marginBottom: 20,
+    marginTop: 8,
+  },
+  invitadoTexto: {
+    flex: 1,
+    fontSize: 13,
+    fontWeight: "500",
+    lineHeight: 18,
+  },
 });
 
 export default styles;

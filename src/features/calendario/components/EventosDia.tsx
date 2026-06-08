@@ -14,12 +14,13 @@ interface Props {
     onAgregarEvento: () => void;
     onEditarEvento: (ev: Evento) => void;
     onEliminarEvento: (ev: Evento) => void;
+    isGuest: boolean;
 }
 
 export const EventosDia = ({
     selectedDate, eventosDia, colors, theme,
     fadeAnim, slideAnim,
-    onAgregarEvento, onEditarEvento, onEliminarEvento,
+    onAgregarEvento, onEditarEvento, onEliminarEvento, isGuest,
 }: Props) => (
     <Animated.View style={{
         marginTop: 20, marginHorizontal: 8,
@@ -38,9 +39,18 @@ export const EventosDia = ({
                     {eventosDia.length} evento(s)
                 </Text>
             </View>
-            <TouchableOpacity onPress={onAgregarEvento} activeOpacity={0.8} style={{
-                backgroundColor: colors.primary, borderRadius: 40, padding: 6, elevation: 3,
-            }}>
+            <TouchableOpacity 
+                onPress={onAgregarEvento} 
+                activeOpacity={0.8} 
+                disabled={isGuest}
+                style={{
+                    backgroundColor: isGuest ? colors.mutedForeground : colors.primary, 
+                    borderRadius: 40, 
+                    padding: 6, 
+                    elevation: 3,
+                    opacity: isGuest ? 0.5 : 1,
+                }}
+            >
                 <Ionicons name="add" size={22} color="#fff" />
             </TouchableOpacity>
         </View>
@@ -61,6 +71,7 @@ export const EventosDia = ({
                     theme={theme}
                     onPress={onEditarEvento}
                     onDelete={onEliminarEvento}
+                    isGuest={isGuest}
                 />
             ))
         )}

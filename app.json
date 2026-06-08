@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "TembiapoApp",
+    "name": "Tembiapo App",
     "slug": "TembiapoApp",
     "version": "1.0.1",
     "orientation": "portrait",
@@ -11,7 +11,7 @@
     "splash": {
       "image": "./assets/images/splash.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#F2F4F7"
     },
     "assetBundlePatterns": [
       "**/*"
@@ -21,9 +21,10 @@
     },
     "android": {
       "edgeToEdgeEnabled": true,
+      "googleServicesFile": "./android/app/google-services.json",
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "foregroundImage": "./assets/images/splash-icon.png",
+        "backgroundColor": "#F2F4F7"
       },
       "package": "com.esfot.TembiapoApp",
       "permissions": [
@@ -45,8 +46,6 @@
       [
         "expo-media-library",
         {
-          "photosPermission": "Permitir acceso a fotos.",
-          "savePhotosPermission": "Permitir guardar archivos.",
           "isAccessMediaLocationEnabled": true,
           "audioPermission": false 
         }

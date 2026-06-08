@@ -6,7 +6,7 @@ import { getReactNativePersistence } from "firebase/auth";
 import { initializeFirestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
 
-// ⚠️ REEMPLAZA ESTOS VALORES CON TU PROPIA CONFIGURACIÓN DE FIREBASE
+// REEMPLAZA ESTOS VALORES CON TU PROPIA CONFIGURACIÓN DE FIREBASE
 
 const firebaseConfig = {
     apiKey: "YOUR_API_KEY",
@@ -26,8 +26,7 @@ export const FIREBASE_AUTH = initializeAuth(FIREBASE_APP, {
 
 export const FIREBASE_DB = initializeFirestore(FIREBASE_APP, {
     experimentalForceLongPolling: true,
-    //  Habilitar persistencia offline
-    cacheSizeBytes: 100 * 1024 * 1024, // 100 MB de caché local
+    cacheSizeBytes: 100 * 1024 * 1024, 
 });
 
 export const FIREBASE_STORAGE = getStorage(FIREBASE_APP);

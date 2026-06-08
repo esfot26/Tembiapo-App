@@ -12,7 +12,7 @@ import {
     deleteDoc,
 } from "firebase/firestore";
 
-import { deleteObject, getStorage, ref, updateMetadata } from "firebase/storage";
+import { deleteObject, getStorage, ref } from "firebase/storage";
 import { getAuth } from "firebase/auth";
 import { FIREBASE_DB } from "@/src/services/FirebaseConfig";
 
@@ -24,43 +24,13 @@ import Toast from "react-native-toast-message";
 
 // 🔹 Hook de permisos
 import { usePermisos } from "@/src/hooks/usePermisos";
+import { ArchivoItem, Carpeta } from "../types";
 
-export type Carpeta = {
-    id: string;
-    nombre: string;
-    color?: string;
-    icono?: string;
-    descripcion?: string;
-    favorito?: boolean;
-    padreId: string | null;
-    creadorId?: string;
-    fechaCreado: Timestamp;
-    fechaActualizado: Timestamp;
-    fechaBorrado?: Timestamp | null;
-    eliminado?: boolean;
-};
 
-export type ArchivoItem = {
-    id: string;
-    nombre: string;
-    carpetaId: string | null;
-    url: string;
-    mimeType: string;
-    size: number;
-    color?: string;
-    creadorId?: string;
-    favorito?: boolean;
-    descripcion?: string;
-    fechaCreado: Timestamp;
-    fechaActualizado?: Timestamp;
-    fechaBorrado?: Timestamp | null;
-    eliminado?: boolean;
-};
 
 export function useCarpeta(parentId: string | null) {
     const auth = getAuth();
 
-    // 🔹 HOOK DE PERMISOS (DENTRO DEL HOOK → CORRECTO)
     const {
         pedirPermisosNecesarios,
         verificarPermisos,
@@ -75,9 +45,11 @@ export function useCarpeta(parentId: string | null) {
     const [isFabMenuVisible, setFabMenuVisible] = useState(false);
     const [progress, setProgress] = useState<number>(0);
     const [uploading, setUploading] = useState<boolean>(false);
+    const cancelRef = useRef(false);
+    const abortControllerRef = useRef<AbortController | null>(null);
     const [uploadTaskRef, setUploadTaskRef] = useState<any>(null);
     const [currentUploadPath, setCurrentUploadPath] = useState<string | null>(null);
-    const cancelRef = useRef(false);
+
 
     const [actionModal, setActionModal] = useState<{
         visible: boolean;
@@ -116,6 +88,8 @@ export function useCarpeta(parentId: string | null) {
 
         checkPerms();
     }, [parentId]);
+
+
 
     /** 🔹 Cargar carpetas y archivos */
     const cargarContenido = useCallback(async () => {
@@ -164,8 +138,9 @@ export function useCarpeta(parentId: string | null) {
         }
     }, [parentId]);
 
-    /** 🔹 Crear carpeta (con Optimistic Update) */
+
     const crearCarpeta = async (nombreCarpeta: string) => {
+        const inicio = Date.now();
         const currentUser = auth.currentUser;
         if (!currentUser) return;
 
@@ -178,7 +153,20 @@ export function useCarpeta(parentId: string | null) {
             return;
         }
 
-        // 🚀 Optimistic Update: Crear carpeta temporal
+
+        const nombreDuplicado = carpetas.some(
+            (c) => c.nombre.trim().toLowerCase() === nombreCarpeta.trim().toLowerCase()
+        );
+
+        if (nombreDuplicado) {
+            Toast.show({
+                type: "error",
+                text1: "Nombre duplicado",
+                text2: `Ya existe una carpeta llamada "${nombreCarpeta}".`,
+            });
+            return;
+        }
+
         const tempId = `temp_${Date.now()}_${Math.floor(Math.random() * 1000000)}`;
         const tempCarpeta: Carpeta = {
             id: tempId,
@@ -191,11 +179,11 @@ export function useCarpeta(parentId: string | null) {
             eliminado: false,
         };
 
-        // ✅ Agregar inmediatamente a la UI
+
         setCarpetas((prev) => [tempCarpeta, ...prev]);
 
         try {
-            // 📡 Guardar en Firebase en segundo plano
+
             const docRef = await addDoc(collection(FIREBASE_DB, `carpeta/${currentUser.uid}/carpetas`), {
                 nombre: nombreCarpeta.trim(),
                 padreId: parentId,
@@ -206,15 +194,27 @@ export function useCarpeta(parentId: string | null) {
                 eliminado: false,
             });
 
-            // 🔄 Reemplazar ID temporal con ID real
+
             setCarpetas((prev) =>
                 prev.map((c) => (c.id === tempId ? { ...c, id: docRef.id } : c))
             );
+
+            const fin = Date.now();
+            console.log(`Tiempo de creación: ${fin - inicio} ms`);
+            const tiempoRespuesta = Date.now() - inicio;
+            console.log(`[PRUEBA] crearCarpeta: ${tiempoRespuesta}ms`);
+
+            if (tiempoRespuesta > 2000) {
+                console.warn(`⚠️ Tiempo excedido: ${tiempoRespuesta}ms`);
+            }
 
             Toast.show({
                 type: "success",
                 text1: "Carpeta creada",
                 text2: `"${nombreCarpeta}" se creó correctamente.`,
+                visibilityTime: 1500,
+                autoHide: true,
+                topOffset: 60,
             });
         } catch (error) {
             console.error("Error creando carpeta:", error);
@@ -228,10 +228,13 @@ export function useCarpeta(parentId: string | null) {
                 text2: "No se pudo crear la carpeta.",
             });
         }
+
+
     };
 
     /** 🔹 Editar carpeta (con Optimistic Update) */
     const editarCarpeta = async (carpetaId: string, nuevoNombre: string) => {
+        const inicio = Date.now();
         const currentUser = auth.currentUser;
         if (!currentUser) return;
 
@@ -240,6 +243,19 @@ export function useCarpeta(parentId: string | null) {
                 type: "error",
                 text1: "Error",
                 text2: "El nombre no puede estar vacío.",
+            });
+            return;
+        }
+
+        const nombreDuplicado = carpetas.some(
+            (c) => c.id !== carpetaId && c.nombre.trim().toLowerCase() === nuevoNombre.trim().toLowerCase()
+        )
+
+        if (nombreDuplicado) {
+            Toast.show({
+                type: "error",
+                text1: "Nombre duplicado",
+                text2: `Ya existe una carpeta llamada "${nuevoNombre}".`,
             });
             return;
         }
@@ -258,6 +274,15 @@ export function useCarpeta(parentId: string | null) {
             )
         );
 
+        const fin = Date.now();
+        console.log(`Tiempo de edicion: ${fin - inicio} ms`);
+        const tiempoRespuesta = Date.now() - inicio;
+        console.log(`[PRUEBA] editarCarpeta: ${tiempoRespuesta}ms`);
+
+        if (tiempoRespuesta > 2000) {
+            console.warn(`⚠️ Tiempo excedido: ${tiempoRespuesta}ms`);
+        }
+
         try {
             // 📡 Actualizar en Firebase en segundo plano
             const ref = doc(FIREBASE_DB, `carpeta/${currentUser.uid}/carpetas/${carpetaId}`);
@@ -270,6 +295,9 @@ export function useCarpeta(parentId: string | null) {
                 type: "success",
                 text1: "Carpeta renombrada",
                 text2: `Ahora se llama "${nuevoNombre}".`,
+                visibilityTime: 1500,
+                autoHide: true,
+                topOffset: 60,
             });
         } catch (error) {
             console.error("Error editando carpeta:", error);
@@ -313,6 +341,9 @@ export function useCarpeta(parentId: string | null) {
                 type: "success",
                 text1: "Carpeta eliminada",
                 text2: "Se movió a la papelera correctamente.",
+                visibilityTime: 1500,
+                autoHide: true,
+                topOffset: 60,
             });
         } catch (error) {
             console.error("Error eliminando carpeta:", error);
@@ -352,6 +383,9 @@ export function useCarpeta(parentId: string | null) {
                 type: "success",
                 text1: "Archivo eliminado",
                 text2: "Se movió a la papelera correctamente.",
+                visibilityTime: 1500,
+                autoHide: true,
+                topOffset: 60,
             });
         } catch (error) {
             console.error("Error eliminando archivo:", error);
@@ -382,7 +416,6 @@ export function useCarpeta(parentId: string | null) {
         if (!archivoOriginal) return;
         const nombreOriginal = archivoOriginal.nombre;
 
-        // ✅ Actualizar inmediatamente en la UI
         setArchivos((prev) =>
             prev.map((a) =>
                 a.id === archivoId
@@ -402,12 +435,14 @@ export function useCarpeta(parentId: string | null) {
             Toast.show({
                 type: "success",
                 text1: "Archivo renombrado",
-                text2: `Ahora se llama "${nuevoNombre}".`
+                text2: `Ahora se llama "${nuevoNombre}".`,
+                visibilityTime: 1500,
+                autoHide: true,
+                topOffset: 60,
             });
         } catch (error) {
             console.error("Error renombrando archivo:", error);
 
-            // ❌ Rollback: Restaurar nombre original
             setArchivos((prev) =>
                 prev.map((a) =>
                     a.id === archivoId ? { ...a, nombre: nombreOriginal } : a
@@ -430,11 +465,7 @@ export function useCarpeta(parentId: string | null) {
     ) => {
         const currentUser = auth.currentUser;
         if (!currentUser) {
-            Toast.show({
-                type: "error",
-                text1: "Error",
-                text2: "Usuario no autenticado.",
-            });
+            Toast.show({ type: "error", text1: "Error", text2: "Usuario no autenticado." });
             return;
         }
 
@@ -442,41 +473,59 @@ export function useCarpeta(parentId: string | null) {
         setProgress(0);
         cancelRef.current = false;
 
+        // ✅ Crear nuevo AbortController para esta subida
+        const abortController = new AbortController();
+        abortControllerRef.current = abortController;
+
         try {
             const infoCheck = await FileSystem.getInfoAsync(file.uri);
             const sizeCheck = typeof file.size === "number" ? file.size : (infoCheck as any)?.size;
+
             if (!isAllowedFile(file.name, sizeCheck)) {
                 Toast.show({ type: "error", text1: "Archivo no permitido", text2: "Solo PDF, imágenes JPG/PNG y documentos Office hasta 10 MB." });
-                setUploading(false);
-                setProgress(0);
                 return;
             }
+
             const bucket = "archivos";
             const path = `${currentUser.uid}/${Date.now()}-${file.name}`;
             setCurrentUploadPath(path);
+
             const base64 = await FileSystem.readAsStringAsync(file.uri, { encoding: "base64" });
+
+            // ✅ Verificar cancelación antes de continuar
+            if (cancelRef.current || abortController.signal.aborted) {
+                setCurrentUploadPath(null);
+                return;
+            }
+
             const fileBuffer = decode(base64);
             const uint8 = new Uint8Array(fileBuffer as ArrayBuffer);
 
-            setProgress(50);
+            setProgress(30);
 
+            // ✅ Pasar signal al fetch interno de Supabase
             const { error: uploadError } = await supabase.storage
                 .from(bucket)
                 .upload(path, uint8, {
                     contentType: file.mimeType || "application/octet-stream",
                     upsert: false,
+                    // @ts-ignore — Supabase acepta fetch options
+                    fetchOptions: { signal: abortController.signal },
                 });
 
-            if (uploadError) throw uploadError;
-
-            const { data: urlData } = supabase.storage.from(bucket).getPublicUrl(path);
-            const publicUrl = urlData.publicUrl;
-
-            if (cancelRef.current) {
+            // ✅ Verificar cancelación después del upload
+            if (cancelRef.current || abortController.signal.aborted) {
                 await supabase.storage.from(bucket).remove([path]).catch(() => { });
                 setCurrentUploadPath(null);
                 return;
             }
+
+            if (uploadError) throw uploadError;
+
+            setProgress(75);
+
+            const { data: urlData } = supabase.storage.from(bucket).getPublicUrl(path);
+            const publicUrl = urlData.publicUrl;
 
             await addDoc(collection(FIREBASE_DB, `carpeta/${currentUser.uid}/archivos`), {
                 nombre: file.name,
@@ -494,10 +543,18 @@ export function useCarpeta(parentId: string | null) {
                 type: "success",
                 text1: "Archivo subido",
                 text2: `"${file.name}" se subió correctamente.`,
+                visibilityTime: 1500,
+                autoHide: true,
+                topOffset: 60,
             });
 
             await cargarContenido();
+
         } catch (error: any) {
+            // ✅ Si fue cancelado no mostrar error
+            if (cancelRef.current || error?.name === "AbortError") {
+                return;
+            }
             console.error("Error subiendo archivo:", error);
             Toast.show({
                 type: "error",
@@ -506,8 +563,10 @@ export function useCarpeta(parentId: string | null) {
             });
         } finally {
             setUploading(false);
+            setProgress(0);
             setCurrentUploadPath(null);
             cancelRef.current = false;
+            abortControllerRef.current = null;
         }
     };
 
@@ -556,18 +615,23 @@ export function useCarpeta(parentId: string | null) {
         }
     };
 
-    /** 🔹 Cancelar subida */
     const handleCancelUpload = () => {
         cancelRef.current = true;
+
+        if (abortControllerRef.current) {
+            abortControllerRef.current.abort();
+            abortControllerRef.current = null;
+        }
+
         setUploading(false);
         setProgress(0);
+
         Toast.show({
             type: "info",
             text1: "Subida cancelada",
-            text2: "La subida del archivo ha sido cancelada.",
+            text2: "La subida del archivo fue cancelada.",
         });
     };
-
     return {
         carpetas,
         archivos,
@@ -599,3 +663,5 @@ export function useCarpeta(parentId: string | null) {
         setActionModal,
     };
 }
+export { Carpeta, ArchivoItem };
+
