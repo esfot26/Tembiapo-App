@@ -4,7 +4,8 @@ import { ScrollView } from "react-native";
 import { RegistroLogic } from "./registro.hook";
 import { RegistroForm } from "./components/RegistroForm";
 import { RegistroFooter } from "./components/RegistroFooter";
-import { RegistroHeader } from "./components/registroHeader";
+import { RegistroHeader } from "./components/RegistroHeader";
+
 
 export default function RegistroScreen() {
     const logic = RegistroLogic();
