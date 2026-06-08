@@ -1,9 +1,7 @@
-// app/index.tsx
 import { useEffect, useState } from "react";
 import { View, ActivityIndicator } from "react-native";
 import { router } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { onAuthStateChanged } from "firebase/auth";
 import { FIREBASE_AUTH } from "@/src/services/FirebaseConfig";
 import { useTheme } from "@/src/contexts/TemaContext";
 
@@ -36,7 +34,7 @@ export default function Index() {
                 // Caso 1: No vio el onboarding
                 if (!onboardingComplete) {
                     console.log("→ Mostrando onboarding");
-                    router.replace("/(onboarding)/index");
+                    router.replace("/(onboarding)/slider");
                     return;
                 }
 
@@ -67,7 +65,7 @@ export default function Index() {
 
             } catch (error) {
                 console.error("Error en verificación:", error);
-                router.replace("/(onboarding)/index");
+                router.replace("/(onboarding)/slider");
             } finally {
                 setCargando(false);
             }

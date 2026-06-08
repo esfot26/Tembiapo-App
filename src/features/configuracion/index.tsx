@@ -103,7 +103,7 @@ export default function ConfiguracionScreen() {
                     text: "Salir",
                     onPress: async () => {
                         await AsyncStorage.removeItem("@tembiapo:modo_invitado");
-                        router.replace("/(onboarding)/welcome");
+                        router.replace("/(onboarding)/slider");
                         Toast.show({
                             type: "info",
                             text1: "Modo invitado",

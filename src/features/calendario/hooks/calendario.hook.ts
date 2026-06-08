@@ -15,7 +15,6 @@ export interface Event {
     tiempo?: string;
 }
 
-// 🔔 Configuración global del handler de notificaciones
 Notifications.setNotificationHandler({
     handleNotification: async () => ({
         shouldShowAlert: true,
@@ -26,7 +25,7 @@ Notifications.setNotificationHandler({
     }),
 });
 
-// 🕒 Helper para combinar fecha + hora (HH:mm)
+
 const parseHoraToDate = (baseDate: Date, horaStr: string) => {
     const parts = (horaStr || "").split(":");
     const h = parseInt(parts[0] || "0", 10);
@@ -36,7 +35,6 @@ const parseHoraToDate = (baseDate: Date, horaStr: string) => {
     return d;
 };
 
-// 🔔 Helper para programar notificación local
 const programarNotificacionEvento = async (params: {
     titulo: string;
     descripcion: string;

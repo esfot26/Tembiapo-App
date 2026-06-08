@@ -232,7 +232,7 @@ export default function CalendarioScreen() {
             />
 
             {isGuest ? (
-                // Mensaje para invitados
+
                 <View style={{ flex: 1, justifyContent: "center", alignItems: "center", paddingHorizontal: 32 }}>
                     <Ionicons name="lock-closed" size={64} color={colors.mutedForeground} />
                     <Text style={{ fontSize: 18, fontWeight: "700", color: colors.foreground, marginTop: 16, textAlign: "center" }}>

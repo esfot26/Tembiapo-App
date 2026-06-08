@@ -10,15 +10,32 @@ import {
 
 import { doc, serverTimestamp, setDoc } from "firebase/firestore";
 import { FIREBASE_DB, FIREBASE_AUTH } from "@/src/services/FirebaseConfig";
-
 import {
     createUserWithEmailAndPassword,
     sendEmailVerification,
 } from "firebase/auth";
-
 import Toast from "react-native-toast-message";
 import * as SecureStore from "expo-secure-store";
 import { useRouter } from "expo-router";
+
+export interface RegistroFormValues {
+    username: string;
+    setUsername: (v: string) => void;
+    nombreCompleto: string;
+    setNombreCompleto: (v: string) => void;
+    telefono: string;
+    setTelefono: (v: string) => void;
+    email: string;
+    setEmail: (v: string) => void;
+    password: string;
+    setPassword: (v: string) => void;
+    confirmPassword: string;
+    setConfirmPassword: (v: string) => void;
+    fechaNacimiento: string;
+    setFechaNacimiento: (v: string) => void;
+    loading: boolean;
+    crearCuenta: () => void;
+}
 
 export const RegistroLogic = () => {
     const router = useRouter();
@@ -109,7 +126,6 @@ export const RegistroLogic = () => {
                 creadoEn: serverTimestamp(),
             });
 
-            // 🔥 ENVIAR VERIFICACIÓN DE CORREO
             await sendEmailVerification(user);
 
             Toast.show({
@@ -118,7 +134,6 @@ export const RegistroLogic = () => {
                 text2: "Te enviamos un correo para verificar tu cuenta.",
             });
 
-            // 👉 Enviar a pantalla de verificación
             router.replace("/(auth)/verificar-correo/verificarCorreo");
 
         } catch (error: any) {
