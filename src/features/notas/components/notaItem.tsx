@@ -6,7 +6,7 @@ import { Nota } from "@/src/services/NotasServices";
 import { AccionesNota } from "./botonesAccion";
 import { categoriaIcon, prioridadIcon } from "../constants/notasContants";
 import { useTheme } from "@/src/contexts/TemaContext";
-import { getStyles } from "../notas.styles"; // Ajusta la ruta
+import { getStyles } from "../styles/notas.styles"; // Ajusta la ruta
 
 interface NotaItemProps {
     item: Nota;

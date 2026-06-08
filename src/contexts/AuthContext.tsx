@@ -43,7 +43,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             if (user && !user.emailVerified) {
                 setUsuario(null);
                 await SecureStore.setItemAsync("uid", user.uid);
-                router.replace("/(auth)/verificar-correo/verificarCorreo");
+                router.replace("/(auth)/verificar-correo/index");
                 return;
             }
 

@@ -1,9 +1,8 @@
 import { StyleSheet } from "react-native";
 
-
 export const getStyles = (colors: {
     primary: any;
-    border: any; background: any; muted: any; foreground: any; card: any 
+    border: any; background: any; muted: any; foreground: any; card: any
 }) => StyleSheet.create({
     containerPrincipal: {
         backgroundColor: colors.card,
@@ -36,10 +35,10 @@ export const getStyles = (colors: {
     categoriaContainer: {
         flexDirection: "row",
         marginTop: 10,
-        flexWrap: "wrap", // Por si las etiquetas son muy largas
+        flexWrap: "wrap",
     },
 
-    // Estilo base para todos los contenedores de iconos/etiquetas
+
     badgeContainer: {
         flexDirection: "row",
         alignItems: "center",
@@ -50,9 +49,9 @@ export const getStyles = (colors: {
         paddingHorizontal: 10,
         borderRadius: 14,
         marginRight: 8,
-        marginBottom: 4, // Un poco de espacio si saltan de línea
+        marginBottom: 4,
     },
-    // Estilo específico para la fecha (si quieres quitarle el marginRight)
+
     fechaContainer: {
         marginRight: 0,
     },
@@ -60,7 +59,7 @@ export const getStyles = (colors: {
         color: colors.foreground,
         marginLeft: 6,
         fontSize: 13,
-        fontWeight: "500" // Un toque más profesional
+        fontWeight: "500"
     },
 
     header: {

@@ -10,7 +10,7 @@ export function checkEmailVerified() {
     }
 
     if (!user.emailVerified) {
-        router.replace("/verificar-correo/verificarCorreo");
+        router.replace("/verificar-correo/index");
         return false;
     }
 

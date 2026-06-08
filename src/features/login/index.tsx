@@ -93,7 +93,6 @@ export default function LoginScreen() {
                             </Text>
                         </TouchableOpacity>
 
-
                         {loading && (
                             <View style={{ alignItems: "center", marginTop: 10 }}>
                                 <Text style={{ color: "#2563EB", fontWeight: "600" }}>Cargando...</Text>

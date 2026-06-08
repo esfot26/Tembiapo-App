@@ -1,6 +1,5 @@
 import { Feather } from "@expo/vector-icons";
 
-
 export const nombreMeses = [
     "Enero",
     "Febrero",

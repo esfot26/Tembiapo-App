@@ -1,12 +1,11 @@
 import { useState, useCallback } from "react";
 import { Toast } from "react-native-toast-message/lib/src/Toast";
-import { Nota, NotasService, NotaData } from "../../services/NotasServices";
+import { Nota, NotasService, NotaData } from "../../../services/NotasServices";
 
 
 export const useNotas = () => {
   const [notas, setNotas] = useState<Nota[]>([]);
   const [loading, setLoading] = useState(false);
-
 
   const obtenerNotas = async () => {
     const inicio = Date.now();
@@ -45,10 +44,10 @@ export const useNotas = () => {
     setNotas((prev) => [tempNota, ...prev]);
 
     try {
-      // 📡 Guardar en Firebase en segundo plano
+      //  Guardar en Firebase en segundo plano
       const nuevaNota = await NotasService.crearNota(notaData);
 
-      // 🔄 Reemplazar nota temporal con nota real
+      //  Reemplazar nota temporal con nota real
       setNotas((prev) =>
         prev.map((n) => (n.id === tempId ? (nuevaNota as unknown as Nota) : n))
       );
@@ -74,7 +73,7 @@ export const useNotas = () => {
       const tiempoRespuesta = Date.now() - inicio;
       console.log(`[PRUEBA] crearNota (error): ${tiempoRespuesta}ms`);
 
-      // ❌ Rollback: Remover nota temporal
+
       setNotas((prev) => prev.filter((n) => n.id !== tempId));
 
       Toast.show({
@@ -92,11 +91,11 @@ export const useNotas = () => {
     notaId: string,
     updates: Partial<Omit<Nota, "id" | "creadorId" | "fechaCreacion">>
   ) => {
-    // 💾 Guardar nota original para rollback
+    // Guardar nota original para rollback
     const notaOriginal = notas.find((n) => n.id === notaId);
     if (!notaOriginal) return;
 
-    // ✅ Actualizar inmediatamente en la UI
+    //  Actualizar inmediatamente en la UI
     setNotas((prev) =>
       prev.map((n) => (n.id === notaId ? { ...n, ...updates } : n))
     );
@@ -105,7 +104,7 @@ export const useNotas = () => {
       // 📡 Actualizar en Firebase en segundo plano
       await NotasService.actualizarNota(notaId, updates);
 
-      // 🔄 Recargar notas para sincronizar con Firebase
+
       await obtenerNotas();
 
       Toast.show({
@@ -116,7 +115,7 @@ export const useNotas = () => {
     } catch (error) {
       console.error("Error al actualizar la nota:", error);
 
-      // ❌ Rollback: Restaurar nota original
+
       setNotas((prev) =>
         prev.map((n) => (n.id === notaId ? notaOriginal : n))
       );
@@ -134,11 +133,10 @@ export const useNotas = () => {
     const notaEliminada = notas.find((n) => n.id === notaId);
     if (!notaEliminada) return;
 
-    // ✅ Remover inmediatamente de la UI
     setNotas((prev) => prev.filter((n) => n.id !== notaId));
 
     try {
-      // 📡 Eliminar en Firebase en segundo plano
+
       await NotasService.eliminarNota(notaId);
 
       Toast.show({
@@ -153,7 +151,7 @@ export const useNotas = () => {
     } catch (error) {
       console.error("Error al eliminar la nota:", error);
 
-      // ❌ Rollback: Restaurar nota
+
       setNotas((prev) => [notaEliminada, ...prev]);
 
       Toast.show({

@@ -6,7 +6,7 @@ export default function AuthLayout() {
             <Stack.Screen name="login/index" />
             <Stack.Screen name="registro/index" />
             <Stack.Screen name="resetear-password/index" />
-            <Stack.Screen name="verificar-correo/verificarCorreo" />
+            <Stack.Screen name="verificar-correo/index" />
         </Stack>
     );
 }
