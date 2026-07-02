@@ -9,6 +9,15 @@ import { NotasProvider } from "@/src/contexts/NotasContext";
 import { PortalHost } from "@rn-primitives/portal";
 import Toast from "react-native-toast-message";
 
+
+if (!__DEV__) {
+  const defaultHandler = ErrorUtils.getGlobalHandler();
+  ErrorUtils.setGlobalHandler((error, isFatal) => {
+    console.error("Error global capturado:", error, "Fatal:", isFatal);
+    defaultHandler(error, isFatal);
+  });
+}
+
 function RootLayoutContent() {
   const { loading } = useAuth();
   const { colors, theme } = useTheme();

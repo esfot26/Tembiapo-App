@@ -25,7 +25,10 @@ export const programarNotificacionEvento = async (params: {
             title: titulo,
             body: descripcion || "Recordatorio de evento",
         },
-        trigger: { type: "date", date: programacion },
+        trigger: {
+            type: Notifications.SchedulableTriggerInputTypes.DATE,
+            date: programacion,
+        },
     });
 };
 

@@ -92,9 +92,7 @@ export function usePerfilForm() {
 
     const handleFieldChange = useCallback((field: keyof FormState, text: string) => {
         setFormData((prev) => ({ ...prev, [field]: text }));
-        // si validateField devuelve bool, actualizá errors acá:
-        // setErrors((prev) => ({ ...prev, [field]: !validateField(field, text) }));
-        validateField(field, text);
+        setErrors((prev) => ({ ...prev, [field]: validateField(field, text) }));
     }, []);
 
     const handleUpdate = async () => {

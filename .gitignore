@@ -20,10 +20,7 @@ web-build/
 
 
 # Credenciales
-src/services/SupabaseConfig.tsx
-src/services/FirebaseConfig.tsx
 project_analysis.json
-**/google-services.json
 **/GoogleService-Info.plist
 **/firestore.rules
 

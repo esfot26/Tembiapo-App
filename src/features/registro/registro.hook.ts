@@ -134,7 +134,7 @@ export const RegistroLogic = () => {
                 text2: "Te enviamos un correo para verificar tu cuenta.",
             });
 
-            router.replace("/(auth)/verificar-correo/index");
+            router.replace("/(auth)/verificar-correo");
 
         } catch (error: any) {
             console.log("Error registro:", error.code);

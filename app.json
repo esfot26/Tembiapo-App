@@ -5,9 +5,9 @@
     "version": "1.0.1",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "TembiapoApp",
+    "scheme": "tembiapoapp",
     "userInterfaceStyle": "automatic",
-    "newArchEnabled": true,
+    "newArchEnabled": false,
     "splash": {
       "image": "./assets/images/splash.png",
       "resizeMode": "contain",
@@ -29,7 +29,14 @@
       "package": "com.esfot.TembiapoApp",
       "permissions": [
         "READ_EXTERNAL_STORAGE",
-        "WRITE_EXTERNAL_STORAGE"
+        "WRITE_EXTERNAL_STORAGE",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.READ_MEDIA_VISUAL_USER_SELECTED",
+        "android.permission.ACCESS_MEDIA_LOCATION",
+        "android.permission.READ_MEDIA_IMAGES",
+        "android.permission.READ_MEDIA_VIDEO",
+        "android.permission.READ_MEDIA_AUDIO"
       ]
     },
     "web": {
@@ -47,7 +54,7 @@
         "expo-media-library",
         {
           "isAccessMediaLocationEnabled": true,
-          "audioPermission": false 
+          "audioPermission": false
         }
       ]
     ],
@@ -57,8 +64,9 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "30dde25e-3904-4fd2-ad4d-f6b8bbae9548"
+        "projectId": "b69c310e-e72f-40f5-8a63-0dface6df13b"
       }
-    }
+    },
+    "owner": "esfot"
   }
 }

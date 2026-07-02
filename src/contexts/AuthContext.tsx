@@ -36,25 +36,30 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }, []);
 
     // ── Firebase auth listener (sin cambios) ───────────────────────────────
-    useEffect(() => {
-        const unsubscribe = onAuthStateChanged(FIREBASE_AUTH, async (user) => {
-            setLoading(false);
+useEffect(() => {
+  const unsubscribe = onAuthStateChanged(FIREBASE_AUTH, async (user) => {
+    try {
+      console.log("Auth cambió:", user?.uid);
 
-            if (user && !user.emailVerified) {
-                setUsuario(null);
-                await SecureStore.setItemAsync("uid", user.uid);
-                router.replace("/(auth)/verificar-correo/index");
-                return;
-            }
+      if (user && !user.emailVerified) {
+        setUsuario(null);
+        await SecureStore.setItemAsync("uid", user.uid);
+        router.replace("/(auth)/verificar-correo");
+        return;
+      }
 
-            // Si hay usuario real, limpia el modo invitado
-            if (user) setIsGuest(false);
+      if (user) setIsGuest(false);
 
-            setUsuario(user ?? null);
-        });
+      setUsuario(user ?? null);
+    } catch (e) {
+      console.error("Error AuthContext:", e);
+    } finally {
+      setLoading(false);
+    }
+  });
 
-        return unsubscribe;
-    }, []);
+  return unsubscribe;
+}, []);
 
     // ── NUEVO: entrar como invitado ────────────────────────────────────────
     const continueAsGuest = async () => {

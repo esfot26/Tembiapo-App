@@ -1,0 +1,15 @@
+node_modules
+.git
+android/app/build
+android/.gradle
+android/app/.cxx
+android/build
+ios/build
+ios/Pods
+*.log
+.expo
+.vscode
+.idea
+*.apk
+*.aab
+*.ipa

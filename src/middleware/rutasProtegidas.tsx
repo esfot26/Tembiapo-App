@@ -5,12 +5,12 @@ export function checkEmailVerified() {
     const user = FIREBASE_AUTH.currentUser;
 
     if (!user) {
-        router.replace("/login");
+        router.replace("/(auth)/login");
         return false;
     }
 
     if (!user.emailVerified) {
-        router.replace("/verificar-correo/index");
+        router.replace("/(auth)/verificar-correo");
         return false;
     }
 

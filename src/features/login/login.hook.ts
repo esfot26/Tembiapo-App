@@ -90,7 +90,7 @@ export const LoginLogic = () => {
 
             if (!user.emailVerified) {
                 Toast.show({ type: "info", text1: "Verifica tu cuenta", text2: "Revisa tu bandeja de entrada." });
-                router.replace("/(auth)/verificar-correo/index");
+                router.replace("/(auth)/verificar-correo");
                 return;
             }
 
